@@ -1,0 +1,95 @@
+version: "3.9"
+
+# ─────────────────────────────────────────────────────────────────────────────
+# Streaming Video-RAG — Docker Compose
+#
+# Profiles:
+#   - default: runs the API + Streamlit UI (SQLite + Chroma, no extra services)
+#   - qdrant:  adds Qdrant for production vector storage
+#   - full:    API + UI + Qdrant + Redis (for Celery job queue)
+#   - ollama:  adds Ollama for local LLM inference
+#
+# Usage:
+#   docker compose up                        # default (SQLite + Chroma)
+#   docker compose --profile qdrant up       # with Qdrant
+#   docker compose --profile full up         # full production stack
+#   docker compose --profile ollama up       # with local Ollama LLM
+# ─────────────────────────────────────────────────────────────────────────────
+
+services:
+
+  # ── FastAPI backend ─────────────────────────────────────────────────────────
+  api:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    command: uvicorn api.main:app --host 0.0.0.0 --port 8000
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./data:/app/data
+      - ./.env:/app/.env
+    environment:
+      - PYTHONUNBUFFERED=1
+    depends_on:
+      - qdrant
+    profiles: ["full"]
+    restart: unless-stopped
+
+  # ── Streamlit UI ────────────────────────────────────────────────────────────
+  ui:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    command: streamlit run ui/app.py --server.port 8501 --server.address 0.0.0.0
+    ports:
+      - "8501:8501"
+    volumes:
+      - ./.env:/app/.env
+    environment:
+      - UI_API_BASE_URL=http://api:8000
+    depends_on:
+      - api
+    profiles: ["full"]
+    restart: unless-stopped
+
+  # ── Qdrant vector store ─────────────────────────────────────────────────────
+  qdrant:
+    image: qdrant/qdrant:latest
+    ports:
+      - "6333:6333"
+      - "6334:6334"
+    volumes:
+      - qdrant_data:/qdrant/storage
+    profiles: ["qdrant", "full"]
+    restart: unless-stopped
+
+  # ── Redis (for Celery async job queue) ─────────────────────────────────────
+  redis:
+    image: redis:7-alpine
+    ports:
+      - "6379:6379"
+    profiles: ["full"]
+    restart: unless-stopped
+
+  # ── Ollama (local LLM inference) ────────────────────────────────────────────
+  ollama:
+    image: ollama/ollama:latest
+    ports:
+      - "11434:11434"
+    volumes:
+      - ollama_data:/root/.ollama
+    profiles: ["ollama"]
+    restart: unless-stopped
+    # For GPU support, uncomment:
+    # deploy:
+    #   resources:
+    #     reservations:
+    #       devices:
+    #         - driver: nvidia
+    #           count: all
+    #           capabilities: [gpu]
+
+volumes:
+  qdrant_data:
+  ollama_data:
