@@ -18,7 +18,29 @@ This project provides an end-to-end pipeline for processing video content (local
 ## 📋 Requirements
 - Python 3.10+
 - FFmpeg (for audio extraction)
-- OpenAI API Key (for embeddings & LLM)
+- LLM Provider (OpenAI API Key **OR** Local Ollama installation)
+
+## ⚠️ Local Ollama Constraints & Recommendations
+
+When running with local Ollama (instead of OpenAI API):
+
+✅ **Recommended Maximum Video Length**: 30-45 minutes
+❌ **Avoid videos longer than 60 minutes** with default settings
+
+### Known Limitations:
+- Streamlit UI has default 120 second timeout for API requests
+- Long video transcription + embedding will exceed HTTP timeout limits
+- Local LLMs have significantly lower processing throughput
+- Whisper transcription on CPU is ~1x realtime speed (1hr video = 1hr processing)
+
+### Workarounds for Long Videos:
+1. **Use the API directly** instead of the Web UI for ingestion
+2. **Increase timeout values** in `ui/app.py` for local usage
+3. **Split long videos** into smaller segments before ingestion
+4. **Run ingestion as background process**
+5. Use larger Ollama models with enough VRAM (7B+ models recommended)
+
+For production usage with long-form content, OpenAI API is recommended for predictable performance.
 
 ## 🚀 Installation
 
@@ -108,6 +130,7 @@ Edit `.env` file for configuration:
 - `VECTOR_STORE` - Choose `chroma` or `qdrant`
 - `WHISPER_MODEL` - Whisper model size (base/small/medium/large)
 - `CHUNK_SIZE` - Text chunk size for embedding
+- `UI_REQUEST_TIMEOUT` - HTTP request timeout for UI (increase for local Ollama, default: 120)
 
 ## 📝 API Endpoints
 

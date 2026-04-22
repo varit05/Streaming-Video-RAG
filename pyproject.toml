@@ -1,0 +1,115 @@
+[project]
+name = "streaming-video-rag"
+version = "0.1.0"
+description = "RAG system for streaming video content with transcription, embeddings, and semantic search"
+authors = [
+  { name = "Streaming Video-RAG Team" }
+]
+readme = "README.md"
+requires-python = ">=3.10"
+classifiers = [
+  "Programming Language :: Python :: 3",
+  "Programming Language :: Python :: 3.10",
+  "Programming Language :: Python :: 3.11",
+  "Programming Language :: Python :: 3.12",
+  "Programming Language :: Python :: 3.13",
+  "Programming Language :: Python :: 3.14",
+  "License :: OSI Approved :: MIT License",
+  "Operating System :: OS Independent",
+  "Topic :: Scientific/Engineering :: Artificial Intelligence",
+  "Topic :: Multimedia :: Video",
+]
+dependencies = [
+  # Core
+  "pydantic>=2.0",
+  "pydantic-settings>=2.0",
+  "python-dotenv>=1.0",
+
+  # Ingestion
+  "yt-dlp>=2024.1.1",
+  "ffmpeg-python>=0.2.0",
+  "requests>=2.31",
+
+  # Transcription
+  "openai-whisper>=20231117",
+
+  # LLM Providers
+  "openai>=1.30",
+  "anthropic>=0.25",
+  "langchain>=0.2",
+  "langchain-openai>=0.1",
+  "langchain-anthropic>=0.1",
+  "langchain-ollama>=0.1",
+  "langchain-community>=0.2",
+
+  # Embeddings
+  "sentence-transformers>=2.7",
+  "torch>=2.0",
+
+  # Vector Stores
+  "chromadb>=0.5",
+  "qdrant-client>=1.9",
+
+  # RAG
+  "tiktoken>=0.7",
+
+  # Storage
+  "sqlalchemy>=2.0",
+  "alembic>=1.13",
+  "aiosqlite>=0.20",
+
+  # API
+  "fastapi>=0.111",
+  "uvicorn[standard]>=0.29",
+  "python-multipart>=0.0.9",
+  "httpx>=0.27",
+
+  # UI
+  "streamlit>=1.35",
+  "streamlit-extras>=0.4",
+
+  # Utilities
+  "tqdm>=4.66",
+  "loguru>=0.7",
+  "tenacity>=8.3",
+]
+
+[project.urls]
+Homepage = "https://github.com/varit05/Streaming-Video-RAG"
+Repository = "https://github.com/varit05/Streaming-Video-RAG.git"
+Issues = "https://github.com/varit05/Streaming-Video-RAG/issues"
+
+[project.scripts]
+video-rag-api = "api.main:main"
+video-rag-ui = "ui.app:main"
+
+[project.optional-dependencies]
+dev = [
+  "black>=24.0.0",
+  "ruff>=0.4.0",
+  "mypy>=1.10.0",
+  "pre-commit>=3.7.0"
+]
+
+[build-system]
+requires = ["setuptools>=64", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools]
+packages = ["api", "ingestion", "llm", "processing", "rag", "storage", "transcription", "ui", "vector_store"]
+
+[tool.black]
+line-length = 120
+target-version = ["py310", "py311", "py312", "py313", "py314"]
+
+[tool.ruff]
+line-length = 120
+target-version = "py310"
+select = ["E", "F", "I", "B", "C4", "SIM"]
+ignore = ["E501"]
+
+[tool.mypy]
+python_version = "3.10"
+strict = true
+ignore_missing_imports = true
+disallow_untyped_defs = false

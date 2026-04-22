@@ -10,6 +10,7 @@ import httpx
 import streamlit as st
 
 API_BASE = os.getenv("UI_API_BASE_URL", "http://localhost:8000")
+REQUEST_TIMEOUT = int(os.getenv("UI_REQUEST_TIMEOUT", 600))
 
 # ── Page config ───────────────────────────────────────────────────────────────
 st.set_page_config(
@@ -68,11 +69,21 @@ def api_get(path: str, **kwargs):
     except httpx.ConnectError:
         st.error("Cannot connect to API. Make sure the FastAPI server is running.")
         return None
+    except httpx.TimeoutException:
+        st.error("""
+        ⏱ Request timed out.
+        
+        If you are using local Ollama with long videos:
+        1. Increase `UI_REQUEST_TIMEOUT` in your .env file
+        2. Recommended value: 600 (10 minutes)
+        3. Or use the REST API directly instead of the Web UI
+        """)
+        return None
 
 
 def api_post(path: str, json: dict):
     try:
-        r = httpx.post(f"{API_BASE}{path}", json=json, timeout=120)
+        r = httpx.post(f"{API_BASE}{path}", json=json, timeout=REQUEST_TIMEOUT)
         r.raise_for_status()
         return r.json()
     except httpx.HTTPStatusError as e:
@@ -80,6 +91,18 @@ def api_post(path: str, json: dict):
         return None
     except httpx.ConnectError:
         st.error("Cannot connect to API. Make sure the FastAPI server is running.")
+        return None
+    except httpx.TimeoutException:
+        st.error(f"""
+        ⏱ Request timed out after {REQUEST_TIMEOUT} seconds.
+        
+        ✅ Solution for local Ollama users:
+        - Add/modify `UI_REQUEST_TIMEOUT=600` in your .env file (10 minutes)
+        - Restart the Streamlit UI
+        - For videos longer than 60 minutes, use the REST API directly
+        
+        Local processing takes approximately 1x realtime (1hr video = 1hr processing)
+        """)
         return None
 
 

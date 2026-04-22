@@ -83,7 +83,7 @@ class YouTubeIngester(BaseIngester):
         """Run yt-dlp in dump-only mode to get video metadata as JSON."""
         try:
             result = subprocess.run(
-                ["yt-dlp", "--dump-json", "--no-playlist", url],
+                ["yt-dlp", "--dump-json", "--no-playlist", "--js-runtimes", "node,deno", url],
                 capture_output=True,
                 text=True,
                 timeout=60,
@@ -107,6 +107,7 @@ class YouTubeIngester(BaseIngester):
             "--extract-audio",
             "--audio-format", "wav",
             "--audio-quality", "0",
+            "--js-runtimes", "node,deno",
             "--postprocessor-args", "ffmpeg:-ar 16000 -ac 1",
             "-o", str(output_path.with_suffix("")),  # yt-dlp adds extension
             url,
