@@ -64,7 +64,10 @@ def get_job_status(job_id: str, db: Session = Depends(get_db)):
     if not job:
         raise HTTPException(status_code=404, detail=f"Job {job_id} not found")
 
-    return JobStatusResponse(**job.to_dict())
+    job_data = job.to_dict()
+    # Rename 'id' field to 'job_id' to match Pydantic model expectation
+    job_data["job_id"] = job_data.pop("id")
+    return JobStatusResponse(**job_data)
 
 
 # ── Background pipeline ──────────────────────────────────────────────────────
@@ -173,11 +176,12 @@ def _run_ingest_pipeline(
 
         # Mark video as error if it was created
         try:
-            video = db.query(Video).filter(Video.id == job_id).first()
-            if video:
-                video.status = "error"
-                video.error_message = str(e)
-                db.commit()
+            if 'asset' in locals() and hasattr(asset, 'video_id'):
+                video = db.query(Video).filter(Video.id == asset.video_id).first()
+                if video:
+                    video.status = "error"
+                    video.error_message = str(e)
+                    db.commit()
         except Exception:
             pass
     finally:

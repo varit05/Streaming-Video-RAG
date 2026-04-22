@@ -66,6 +66,9 @@ class Settings(BaseSettings):
     api_host: str = "0.0.0.0"
     api_port: int = 8000
     api_reload: bool = False
+    api_http2: bool = True
+    api_ssl_certfile: str = "./certs/localhost.pem"
+    api_ssl_keyfile: str = "./certs/localhost-key.pem"
 
     # ── RAG tuning ────────────────────────────────────────────────────────
     retrieval_top_k: int = 5

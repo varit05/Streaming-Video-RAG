@@ -164,7 +164,11 @@ class WhisperTranscriber:
         """Call the OpenAI Whisper API."""
         from openai import OpenAI
 
-        client = OpenAI(api_key=settings.openai_api_key)
+        client = OpenAI(
+            api_key=settings.openai_api_key,
+            timeout=120.0,  # 2 minute timeout for API calls
+            max_retries=2
+        )
 
         with open(audio_path, "rb") as f:
             kwargs = {

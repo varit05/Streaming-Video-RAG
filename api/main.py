@@ -84,4 +84,10 @@ if __name__ == "__main__":
         host=settings.api_host,
         port=settings.api_port,
         reload=settings.api_reload,
+        http="h11",
+        h2=settings.api_http2,
+        ssl_certfile=settings.api_ssl_certfile,
+        ssl_keyfile=settings.api_ssl_keyfile,
+        timeout_keep_alive=300,  # 5 minute timeout for long running tasks
+        timeout_graceful_shutdown=300
     )
