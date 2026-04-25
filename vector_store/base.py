@@ -10,8 +10,9 @@ from processing.chunker import VideoChunk
 @dataclass
 class SearchResult:
     """A retrieved chunk with its similarity score."""
+
     chunk: VideoChunk
-    score: float        # higher = more similar (normalized 0-1)
+    score: float  # higher = more similar (normalized 0-1)
 
     @property
     def video_id(self) -> str:
@@ -31,7 +32,6 @@ class SearchResult:
 
 
 class BaseVectorStore(ABC):
-
     @abstractmethod
     def add_chunks(self, chunks: list[VideoChunk], embeddings: list[list[float]]) -> None:
         """Store chunks and their embeddings."""

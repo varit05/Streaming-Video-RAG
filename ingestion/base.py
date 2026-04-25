@@ -29,14 +29,14 @@ class VideoAsset:
     title: str
     source_url: str
     source_type: SourceType
-    local_audio_path: Path          # Path to extracted 16kHz mono WAV
+    local_audio_path: Path  # Path to extracted 16kHz mono WAV
     duration_seconds: Optional[float] = None
     description: Optional[str] = None
-    chapters: list[dict] = field(default_factory=list)  # [{title, start, end}]
+    chapters: list[dict[str, str | float]] = field(default_factory=list)  # [{title, start, end}]
     thumbnail_url: Optional[str] = None
     uploader: Optional[str] = None
     upload_date: Optional[str] = None
-    extra_metadata: dict = field(default_factory=dict)
+    extra_metadata: dict[str, object] = field(default_factory=dict)
 
     @classmethod
     def generate_id(cls) -> str:

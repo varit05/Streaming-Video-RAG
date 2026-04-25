@@ -3,9 +3,9 @@ Central configuration for the Streaming Video-RAG system.
 All settings are driven by environment variables (see .env.example).
 """
 
-import os
 from enum import Enum
 from pathlib import Path
+
 from pydantic_settings import BaseSettings
 
 
@@ -33,8 +33,8 @@ class VectorStoreType(str, Enum):
 class Settings(BaseSettings):
     # ── LLM ──────────────────────────────────────────────────────────────────
     llm_provider: LLMProvider = LLMProvider.OPENAI
-    llm_model: str = "gpt-4o"               # used for openai + anthropic
-    ollama_model: str = "llama3"            # used when provider=ollama
+    llm_model: str = "gpt-4o"  # used for openai + anthropic
+    ollama_model: str = "llama3"  # used when provider=ollama
     ollama_base_url: str = "http://localhost:11434"
 
     openai_api_key: str = ""
@@ -76,7 +76,7 @@ class Settings(BaseSettings):
     chunk_overlap_seconds: int = 15
 
     # ── Live stream ───────────────────────────────────────────────────────
-    live_stream_segment_seconds: int = 60   # capture window per segment
+    live_stream_segment_seconds: int = 60  # capture window per segment
 
     # ── UI ────────────────────────────────────────────────────────────────
     ui_api_base_url: str = "http://localhost:8000"

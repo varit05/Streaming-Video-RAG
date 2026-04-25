@@ -3,20 +3,21 @@ Pydantic request/response models for the FastAPI API.
 """
 
 from typing import Optional
+
 from pydantic import BaseModel, Field
 
-
 # ── Ingest ───────────────────────────────────────────────────────────────────
+
 
 class IngestRequest(BaseModel):
     source: str = Field(..., description="YouTube URL, local file path, stream URL, or video API URL")
     source_type: Optional[str] = Field(
         None,
-        description="Hint for source type: 'youtube' | 'local_file' | 'live_stream' | 'video_api'. Auto-detected if omitted."
+        description="Hint for source type: 'youtube' | 'local_file' | 'live_stream' | 'video_api'. Auto-detected if omitted.",
     )
     language: Optional[str] = Field(None, description="ISO 639-1 language code (e.g. 'en'). Auto-detected if omitted.")
     platform: Optional[str] = Field(None, description="For video_api source: 'vimeo' | 'twitch'")
-    api_credentials: Optional[dict] = Field(None, description="API credentials for video_api source")
+    api_credentials: Optional[dict[str, str]] = Field(None, description="API credentials for video_api source")
 
 
 class IngestResponse(BaseModel):
@@ -37,6 +38,7 @@ class JobStatusResponse(BaseModel):
 
 # ── Videos ───────────────────────────────────────────────────────────────────
 
+
 class VideoResponse(BaseModel):
     id: str
     title: str
@@ -56,6 +58,7 @@ class VideoListResponse(BaseModel):
 
 
 # ── Q&A ──────────────────────────────────────────────────────────────────────
+
 
 class QueryRequest(BaseModel):
     question: str = Field(..., description="Natural language question to answer from video content")
@@ -81,6 +84,7 @@ class QueryResponse(BaseModel):
 
 
 # ── Search ───────────────────────────────────────────────────────────────────
+
 
 class SearchRequest(BaseModel):
     query: str = Field(..., description="Semantic search query")
@@ -111,6 +115,7 @@ class SearchResponse(BaseModel):
 
 
 # ── Summarize ────────────────────────────────────────────────────────────────
+
 
 class SummarizeRequest(BaseModel):
     video_id: str

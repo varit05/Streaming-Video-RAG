@@ -1,6 +1,6 @@
-from .retriever import Retriever
 from .qa_chain import QAChain
-from .summarizer import Summarizer
+from .retriever import Retriever, get_retriever
 from .search import SearchEngine
+from .summarizer import Summarizer
 
-__all__ = ["Retriever", "QAChain", "Summarizer", "SearchEngine"]
+__all__ = ["Retriever", "get_retriever", "QAChain", "Summarizer", "SearchEngine"]

@@ -13,10 +13,10 @@ from typing import Optional
 import requests
 from loguru import logger
 
-from .base import BaseIngester, VideoAsset, SourceType
-
+from .base import BaseIngester, SourceType, VideoAsset
 
 # ── Base API Ingester ────────────────────────────────────────────────────────
+
 
 class VideoAPIIngester(BaseIngester):
     """
@@ -24,7 +24,7 @@ class VideoAPIIngester(BaseIngester):
     Subclasses implement _fetch_metadata() and _get_download_url().
     """
 
-    def __init__(self, credentials: dict, audio_dir: str = "./data/audio"):
+    def __init__(self, credentials: dict[str, str], audio_dir: str = "./data/audio"):
         super().__init__(audio_dir)
         self.credentials = credentials
         self.session = requests.Session()
@@ -43,6 +43,7 @@ class VideoAPIIngester(BaseIngester):
 
 # ── Vimeo ────────────────────────────────────────────────────────────────────
 
+
 class VimeoIngester(VideoAPIIngester):
     """
     Vimeo API ingester. Requires a Vimeo API access token.
@@ -53,10 +54,12 @@ class VimeoIngester(VideoAPIIngester):
 
     def _setup_auth(self) -> None:
         token = self.credentials.get("access_token", "")
-        self.session.headers.update({
-            "Authorization": f"bearer {token}",
-            "Accept": "application/vnd.vimeo.*+json;version=3.4",
-        })
+        self.session.headers.update(
+            {
+                "Authorization": f"bearer {token}",
+                "Accept": "application/vnd.vimeo.*+json;version=3.4",
+            }
+        )
 
     def validate(self, source: str) -> bool:
         return "vimeo.com" in source
@@ -92,7 +95,7 @@ class VimeoIngester(VideoAPIIngester):
         parts = url.rstrip("/").split("/")
         return parts[-1]
 
-    def _fetch_metadata(self, vimeo_id: str) -> dict:
+    def _fetch_metadata(self, vimeo_id: str) -> dict[str, object]:
         try:
             resp = self.session.get(f"{self.API_BASE}/videos/{vimeo_id}", timeout=30)
             resp.raise_for_status()
@@ -105,9 +108,13 @@ class VimeoIngester(VideoAPIIngester):
         """Fall back to yt-dlp for Vimeo download (handles auth via cookies if needed)."""
         cmd = [
             "yt-dlp",
-            "--extract-audio", "--audio-format", "wav",
-            "--postprocessor-args", "ffmpeg:-ar 16000 -ac 1",
-            "-o", str(output.with_suffix("")),
+            "--extract-audio",
+            "--audio-format",
+            "wav",
+            "--postprocessor-args",
+            "ffmpeg:-ar 16000 -ac 1",
+            "-o",
+            str(output.with_suffix("")),
             url,
         ]
         result = subprocess.run(cmd, capture_output=True, text=True, timeout=600)
@@ -121,6 +128,7 @@ class VimeoIngester(VideoAPIIngester):
 
 # ── Twitch ───────────────────────────────────────────────────────────────────
 
+
 class TwitchIngester(VideoAPIIngester):
     """
     Twitch API ingester for VODs (past broadcasts).
@@ -133,17 +141,23 @@ class TwitchIngester(VideoAPIIngester):
     def _setup_auth(self) -> None:
         # Get app access token
         try:
-            resp = requests.post(self.AUTH_URL, params={
-                "client_id": self.credentials.get("client_id", ""),
-                "client_secret": self.credentials.get("client_secret", ""),
-                "grant_type": "client_credentials",
-            }, timeout=15)
+            resp = requests.post(
+                self.AUTH_URL,
+                params={
+                    "client_id": self.credentials.get("client_id", ""),
+                    "client_secret": self.credentials.get("client_secret", ""),
+                    "grant_type": "client_credentials",
+                },
+                timeout=15,
+            )
             resp.raise_for_status()
             token = resp.json().get("access_token", "")
-            self.session.headers.update({
-                "Authorization": f"Bearer {token}",
-                "Client-Id": self.credentials.get("client_id", ""),
-            })
+            self.session.headers.update(
+                {
+                    "Authorization": f"Bearer {token}",
+                    "Client-Id": self.credentials.get("client_id", ""),
+                }
+            )
         except requests.RequestException as e:
             logger.warning(f"[Twitch] Auth setup failed: {e}")
 
@@ -183,7 +197,7 @@ class TwitchIngester(VideoAPIIngester):
         parts = url.rstrip("/").split("/")
         return parts[-1].replace("v", "")
 
-    def _fetch_vod_metadata(self, vod_id: str) -> dict:
+    def _fetch_vod_metadata(self, vod_id: str) -> dict[str, object]:
         try:
             resp = self.session.get(f"{self.API_BASE}/videos", params={"id": vod_id}, timeout=30)
             resp.raise_for_status()
@@ -199,6 +213,7 @@ class TwitchIngester(VideoAPIIngester):
             return None
         total = 0
         import re
+
         for value, unit in re.findall(r"(\d+)([hms])", duration_str):
             if unit == "h":
                 total += int(value) * 3600
@@ -211,9 +226,13 @@ class TwitchIngester(VideoAPIIngester):
     def _download_via_ytdlp(self, url: str, output: Path) -> None:
         cmd = [
             "yt-dlp",
-            "--extract-audio", "--audio-format", "wav",
-            "--postprocessor-args", "ffmpeg:-ar 16000 -ac 1",
-            "-o", str(output.with_suffix("")),
+            "--extract-audio",
+            "--audio-format",
+            "wav",
+            "--postprocessor-args",
+            "ffmpeg:-ar 16000 -ac 1",
+            "-o",
+            str(output.with_suffix("")),
             url,
         ]
         result = subprocess.run(cmd, capture_output=True, text=True, timeout=600)
@@ -227,7 +246,8 @@ class TwitchIngester(VideoAPIIngester):
 
 # ── Factory ──────────────────────────────────────────────────────────────────
 
-def get_api_ingester(platform: str, credentials: dict, audio_dir: str = "./data/audio") -> VideoAPIIngester:
+
+def get_api_ingester(platform: str, credentials: dict[str, str], audio_dir: str = "./data/audio") -> VideoAPIIngester:
     """
     Factory: return the right VideoAPIIngester for the given platform name.
 

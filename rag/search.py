@@ -9,15 +9,17 @@ from typing import Optional
 from loguru import logger
 
 from vector_store import SearchResult
-from .retriever import Retriever
+
+from .retriever import get_retriever
 
 
 @dataclass
 class SearchResponse:
     """Structured search result for API responses."""
+
     query: str
     total_results: int
-    results: list[dict]
+    results: list[dict[str, object]]
 
 
 class SearchEngine:
@@ -27,7 +29,7 @@ class SearchEngine:
     """
 
     def __init__(self):
-        self.retriever = Retriever()
+        self.retriever = get_retriever()
 
     def search(
         self,
@@ -65,7 +67,7 @@ class SearchEngine:
 
     # ── Private helpers ──────────────────────────────────────────────────────
 
-    def _format_result(self, result: SearchResult, rank: int) -> dict:
+    def _format_result(self, result: SearchResult, rank: int) -> dict[str, object]:
         chunk = result.chunk
         return {
             "rank": rank,

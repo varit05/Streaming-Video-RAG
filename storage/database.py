@@ -7,13 +7,11 @@ import uuid
 from datetime import datetime
 from typing import Generator
 
-from sqlalchemy import (
-    Column, String, Float, Integer, Text, DateTime, Enum as SAEnum, create_engine
-)
+from sqlalchemy import Column, DateTime, Float, Integer, String, Text, create_engine
+from sqlalchemy import Enum as SAEnum
 from sqlalchemy.orm import DeclarativeBase, Session, sessionmaker
 
 from config import settings
-
 
 # ── Engine + session ─────────────────────────────────────────────────────────
 
@@ -31,14 +29,16 @@ class Base(DeclarativeBase):
 
 # ── Models ───────────────────────────────────────────────────────────────────
 
+
 class Video(Base):
     """Stores metadata for each indexed video."""
+
     __tablename__ = "videos"
 
     id = Column(String, primary_key=True, default=lambda: str(uuid.uuid4()))
     title = Column(String, nullable=False)
     source_url = Column(String, nullable=False)
-    source_type = Column(String, nullable=False)   # youtube | local_file | live_stream | video_api
+    source_type = Column(String, nullable=False)  # youtube | local_file | live_stream | video_api
     duration_seconds = Column(Float, nullable=True)
     description = Column(Text, nullable=True)
     uploader = Column(String, nullable=True)
@@ -53,7 +53,7 @@ class Video(Base):
     created_at = Column(DateTime, default=datetime.utcnow)
     indexed_at = Column(DateTime, nullable=True)
 
-    def to_dict(self) -> dict:
+    def to_dict(self) -> dict[str, object]:
         return {
             "id": self.id,
             "title": self.title,
@@ -74,11 +74,12 @@ class Video(Base):
 
 class IngestJob(Base):
     """Tracks the status of each ingestion job."""
+
     __tablename__ = "ingest_jobs"
 
     id = Column(String, primary_key=True, default=lambda: str(uuid.uuid4()))
-    video_id = Column(String, nullable=True)          # populated once ingestion starts
-    source = Column(String, nullable=False)           # original source URL or path
+    video_id = Column(String, nullable=True)  # populated once ingestion starts
+    source = Column(String, nullable=False)  # original source URL or path
     source_type = Column(String, nullable=False)
     status = Column(
         SAEnum("queued", "ingesting", "transcribing", "indexing", "done", "error", name="job_status"),
@@ -89,7 +90,7 @@ class IngestJob(Base):
     created_at = Column(DateTime, default=datetime.utcnow)
     completed_at = Column(DateTime, nullable=True)
 
-    def to_dict(self) -> dict:
+    def to_dict(self) -> dict[str, object]:
         return {
             "id": self.id,
             "video_id": self.video_id,
@@ -104,6 +105,7 @@ class IngestJob(Base):
 
 
 # ── Helpers ──────────────────────────────────────────────────────────────────
+
 
 def init_db() -> None:
     """Create all tables (safe to call multiple times)."""

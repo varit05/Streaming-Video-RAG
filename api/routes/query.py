@@ -2,12 +2,16 @@
 /query and /summarize routes — RAG-powered Q&A and summarization.
 """
 
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter
 from loguru import logger
 
 from api.models import (
-    QueryRequest, QueryResponse, SourceCitation,
-    SummarizeRequest, SummarizeResponse, ChapterSummary,
+    ChapterSummary,
+    QueryRequest,
+    QueryResponse,
+    SourceCitation,
+    SummarizeRequest,
+    SummarizeResponse,
 )
 from rag import QAChain, Summarizer
 
@@ -55,8 +59,7 @@ def summarize_video(request: SummarizeRequest):
     chapter_summaries = None
     if result.chapter_summaries:
         chapter_summaries = [
-            ChapterSummary(chapter=c["chapter"], summary=c["summary"])
-            for c in result.chapter_summaries
+            ChapterSummary(chapter=c["chapter"], summary=c["summary"]) for c in result.chapter_summaries
         ]
 
     return SummarizeResponse(

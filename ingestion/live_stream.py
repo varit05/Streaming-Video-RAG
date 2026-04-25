@@ -5,17 +5,15 @@ so each segment can be processed through the pipeline independently.
 This enables near-real-time indexing of live content.
 """
 
-import subprocess
-import threading
-import time
 from pathlib import Path
-from typing import Generator, Optional, Callable
+from typing import Callable, Generator, Optional
 
 import ffmpeg
 from loguru import logger
 
 from config import settings
-from .base import BaseIngester, VideoAsset, SourceType
+
+from .base import BaseIngester, SourceType, VideoAsset
 
 
 class LiveStreamIngester(BaseIngester):
@@ -36,7 +34,8 @@ class LiveStreamIngester(BaseIngester):
             source.startswith("rtmp://")
             or source.startswith("rtmps://")
             or ".m3u8" in source
-            or source.startswith("http") and "stream" in source.lower()
+            or source.startswith("http")
+            and "stream" in source.lower()
         )
 
     def ingest(self, source: str, video_id: Optional[str] = None) -> VideoAsset:
@@ -111,8 +110,7 @@ class LiveStreamIngester(BaseIngester):
         """
         try:
             (
-                ffmpeg
-                .input(source, t=duration_seconds)
+                ffmpeg.input(source, t=duration_seconds)
                 .output(
                     str(output),
                     ar=16000,

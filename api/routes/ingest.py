@@ -93,6 +93,7 @@ def _get_transcriber():
         with _transcriber_lock:
             if _transcriber_singleton is None:
                 from transcription import WhisperTranscriber
+
                 _transcriber_singleton = WhisperTranscriber()
     return _transcriber_singleton
 
@@ -103,6 +104,7 @@ def _get_embedder():
         with _embedder_lock:
             if _embedder_singleton is None:
                 from processing import Embedder
+
                 _embedder_singleton = Embedder()
     return _embedder_singleton
 
@@ -113,6 +115,7 @@ def _get_vector_store():
         with _vector_store_lock:
             if _vector_store_singleton is None:
                 from vector_store import get_vector_store as _factory
+
                 _vector_store_singleton = _factory()
     return _vector_store_singleton
 
@@ -123,7 +126,7 @@ def _run_ingest_pipeline(
     source_type: str,
     language: str = None,
     platform: str = None,
-    api_credentials: dict = None,
+    api_credentials: dict[str, str] | None = None,
 ) -> None:
     """
     Full ingestion pipeline run as a background task:
@@ -135,6 +138,7 @@ def _run_ingest_pipeline(
     6. Save transcript + update metadata
     """
     from storage.database import SessionLocal
+
     db = SessionLocal()
 
     def update_job(status: str, message: str, video_id: str = None, error: str = None):
@@ -196,6 +200,7 @@ def _run_ingest_pipeline(
 
         # ── Step 4: Chunk ─────────────────────────────────────────────────────
         from processing import Chunker
+
         chunker = Chunker()
         chunks = chunker.chunk(transcript, asset)
 
@@ -228,7 +233,7 @@ def _run_ingest_pipeline(
 
         # Mark video as error if it was created
         try:
-            if 'asset' in locals() and hasattr(asset, 'video_id'):
+            if "asset" in locals() and hasattr(asset, "video_id"):
                 video = db.query(Video).filter(Video.id == asset.video_id).first()
                 if video:
                     video.status = "error"
@@ -250,8 +255,8 @@ def _detect_source_type(source: str) -> str:
     return "local_file"
 
 
-def _get_ingester(source_type: str, platform: str = None, credentials: dict = None):
-    from ingestion import YouTubeIngester, LocalFileIngester, LiveStreamIngester
+def _get_ingester(source_type: str, platform: str | None = None, credentials: dict[str, str] | None = None):
+    from ingestion import LiveStreamIngester, LocalFileIngester, YouTubeIngester
     from ingestion.video_api import get_api_ingester
 
     if source_type == "youtube":

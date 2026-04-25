@@ -13,9 +13,10 @@ Usage:
 """
 
 from functools import lru_cache
+
 from loguru import logger
 
-from config import settings, LLMProvider
+from config import LLMProvider, settings
 
 
 @lru_cache(maxsize=1)
@@ -54,8 +55,10 @@ def get_llm_provider_name() -> str:
 
 # ── Provider implementations ─────────────────────────────────────────────────
 
+
 def _openai_llm(temperature: float):
     from langchain_openai import ChatOpenAI
+
     return ChatOpenAI(
         model=settings.llm_model,
         temperature=temperature,
@@ -66,6 +69,7 @@ def _openai_llm(temperature: float):
 
 def _anthropic_llm(temperature: float):
     from langchain_anthropic import ChatAnthropic
+
     return ChatAnthropic(
         model=settings.llm_model,
         temperature=temperature,
@@ -76,6 +80,7 @@ def _anthropic_llm(temperature: float):
 
 def _ollama_llm(temperature: float):
     from langchain_ollama import ChatOllama
+
     return ChatOllama(
         model=settings.ollama_model,
         temperature=temperature,
