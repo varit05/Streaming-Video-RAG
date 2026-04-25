@@ -118,6 +118,7 @@ class Chunker:
         chunk_index = 0
 
         while i < n:
+            start_i = i
             window_start = segments[i].start
             window_end = window_start + self.chunk_duration
             j = i
@@ -159,9 +160,11 @@ class Chunker:
             while i < n and segments[i].start < overlap_start:
                 i += 1
 
-            # Safety: always advance at least one segment
-            if i >= j:
-                i = j
+            # Safety: always advance at least one segment to guarantee termination.
+            # This prevents infinite loops on the last chunk when overlap_start
+            # falls before the first segment of the current window.
+            if i <= start_i:
+                i = start_i + 1
 
         logger.info(f"[Chunker] {asset.video_id} → {len(chunks)} chunks")
         return chunks
