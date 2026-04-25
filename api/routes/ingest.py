@@ -72,6 +72,38 @@ def get_job_status(job_id: str, db: Session = Depends(get_db)):
 
 # ── Background pipeline ──────────────────────────────────────────────────────
 
+# Module-level singletons avoid reloading heavy ML models on every job.
+# In a multi-worker deployment each worker holds its own instance, but
+# within a worker the model is reused across all background tasks.
+_transcriber_singleton = None
+_embedder_singleton = None
+_vector_store_singleton = None
+
+
+def _get_transcriber():
+    global _transcriber_singleton
+    if _transcriber_singleton is None:
+        from transcription import WhisperTranscriber
+        _transcriber_singleton = WhisperTranscriber()
+    return _transcriber_singleton
+
+
+def _get_embedder():
+    global _embedder_singleton
+    if _embedder_singleton is None:
+        from processing import Embedder
+        _embedder_singleton = Embedder()
+    return _embedder_singleton
+
+
+def _get_vector_store():
+    global _vector_store_singleton
+    if _vector_store_singleton is None:
+        from vector_store import get_vector_store as _factory
+        _vector_store_singleton = _factory()
+    return _vector_store_singleton
+
+
 def _run_ingest_pipeline(
     job_id: str,
     source: str,
@@ -131,8 +163,7 @@ def _run_ingest_pipeline(
         db.commit()
 
         # ── Step 3: Transcribe ────────────────────────────────────────────────
-        from transcription import WhisperTranscriber
-        transcriber = WhisperTranscriber()
+        transcriber = _get_transcriber()
         transcript = transcriber.transcribe(asset.local_audio_path, asset.video_id, language)
 
         # Save transcript to disk
@@ -142,7 +173,7 @@ def _run_ingest_pipeline(
         update_job("indexing", "Chunking and indexing content...")
 
         # ── Step 4: Chunk ─────────────────────────────────────────────────────
-        from processing import Chunker, Embedder
+        from processing import Chunker
         chunker = Chunker()
         chunks = chunker.chunk(transcript, asset)
 
@@ -150,12 +181,11 @@ def _run_ingest_pipeline(
             raise ValueError("No chunks produced from transcript — audio may be silent or too short")
 
         # ── Step 5: Embed ─────────────────────────────────────────────────────
-        embedder = Embedder()
+        embedder = _get_embedder()
         embeddings = embedder.embed_chunks(chunks)
 
         # ── Step 6: Store ─────────────────────────────────────────────────────
-        from vector_store import get_vector_store
-        store = get_vector_store()
+        store = _get_vector_store()
         store.add_chunks(chunks, embeddings)
 
         # ── Step 7: Update DB ─────────────────────────────────────────────────
