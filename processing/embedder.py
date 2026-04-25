@@ -9,7 +9,8 @@ Two modes controlled by EMBEDDING_MODE env var:
 from loguru import logger
 from tenacity import retry, stop_after_attempt, wait_exponential
 
-from config import settings, EmbeddingMode
+from config import EmbeddingMode, settings
+
 from .chunker import VideoChunk
 
 
@@ -23,12 +24,13 @@ class Embedder:
     def __init__(self):
         self.mode = settings.embedding_mode
         self._local_model = None
+        self._openai_client = None
 
     @property
     def dimension(self) -> int:
         """Return the embedding vector dimension for the active model."""
         if self.mode == EmbeddingMode.LOCAL:
-            return 384     # all-MiniLM-L6-v2
+            return 384  # all-MiniLM-L6-v2
         else:
             # text-embedding-3-small = 1536, text-embedding-3-large = 3072
             if "large" in settings.openai_embedding_model:
@@ -81,18 +83,30 @@ class Embedder:
     def _get_local_model(self):
         if self._local_model is None:
             from sentence_transformers import SentenceTransformer
+
             model_name = settings.local_embedding_model
             logger.info(f"[Embedder/local] Loading model: {model_name}")
             self._local_model = SentenceTransformer(model_name)
         return self._local_model
 
+    def _get_openai_client(self):
+        if self._openai_client is None:
+            if not settings.openai_api_key:
+                raise RuntimeError("OPENAI_API_KEY is not set. Required when EMBEDDING_MODE=openai.")
+            from openai import OpenAI
+
+            self._openai_client = OpenAI(
+                api_key=settings.openai_api_key,
+                timeout=60.0,
+                max_retries=2,
+            )
+        return self._openai_client
+
     # ── OpenAI embeddings ────────────────────────────────────────────────────
 
     @retry(stop=stop_after_attempt(3), wait=wait_exponential(min=1, max=8))
     def _embed_openai(self, texts: list[str]) -> list[list[float]]:
-        from openai import OpenAI
-
-        client = OpenAI(api_key=settings.openai_api_key)
+        client = self._get_openai_client()
         model = settings.openai_embedding_model
 
         # OpenAI API allows up to 2048 inputs per call

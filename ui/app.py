@@ -21,7 +21,8 @@ st.set_page_config(
 )
 
 # ── Custom CSS ────────────────────────────────────────────────────────────────
-st.markdown("""
+st.markdown(
+    """
 <style>
     .result-card {
         background: #f8f9fa;
@@ -53,10 +54,13 @@ st.markdown("""
         font-size: 0.85em;
     }
 </style>
-""", unsafe_allow_html=True)
+""",
+    unsafe_allow_html=True,
+)
 
 
 # ── Helpers ───────────────────────────────────────────────────────────────────
+
 
 def api_get(path: str, **kwargs):
     try:
@@ -81,7 +85,7 @@ def api_get(path: str, **kwargs):
         return None
 
 
-def api_post(path: str, json: dict):
+def api_post(path: str, json: dict[str, object]):
     try:
         r = httpx.post(f"{API_BASE}{path}", json=json, timeout=REQUEST_TIMEOUT)
         r.raise_for_status()
@@ -106,9 +110,9 @@ def api_post(path: str, json: dict):
         return None
 
 
-def poll_job(job_id: str, placeholder) -> dict:
+def poll_job(job_id: str, placeholder: "st.delta_generator.DeltaGenerator") -> dict[str, object]:
     """Poll ingestion job until done or error."""
-    for _ in range(300):   # max ~5 minutes
+    for _ in range(300):  # max ~5 minutes
         data = api_get(f"/ingest/{job_id}")
         if not data:
             return {}
@@ -133,10 +137,10 @@ with st.sidebar:
         st.markdown(f"""
         | Setting | Value |
         |---|---|
-        | LLM | `{health.get('llm_provider')}/{health.get('llm_model')}` |
-        | Whisper | `{health.get('whisper_mode')}/{health.get('whisper_model')}` |
-        | Embeddings | `{health.get('embedding_mode')}` |
-        | Vector Store | `{health.get('vector_store')}` |
+        | LLM | `{health.get("llm_provider")}/{health.get("llm_model")}` |
+        | Whisper | `{health.get("whisper_mode")}/{health.get("whisper_model")}` |
+        | Embeddings | `{health.get("embedding_mode")}` |
+        | Vector Store | `{health.get("vector_store")}` |
         """)
     else:
         st.error("API Offline")
@@ -151,9 +155,9 @@ with st.sidebar:
 
 # ── Main tabs ─────────────────────────────────────────────────────────────────
 
-tab_ingest, tab_qa, tab_search, tab_summarize, tab_library = st.tabs([
-    "📥 Ingest", "❓ Q&A", "🔍 Search", "📝 Summarize", "📚 Library"
-])
+tab_ingest, tab_qa, tab_search, tab_summarize, tab_library = st.tabs(
+    ["📥 Ingest", "❓ Q&A", "🔍 Search", "📝 Summarize", "📚 Library"]
+)
 
 
 # ══════════════════════════════════════════════════════════════════════════════
@@ -161,7 +165,9 @@ tab_ingest, tab_qa, tab_search, tab_summarize, tab_library = st.tabs([
 # ══════════════════════════════════════════════════════════════════════════════
 with tab_ingest:
     st.header("Ingest a Video")
-    st.caption("Add a video source to your RAG library. Supports YouTube URLs, local files, live streams, and video APIs.")
+    st.caption(
+        "Add a video source to your RAG library. Supports YouTube URLs, local files, live streams, and video APIs."
+    )
 
     source_type = st.radio(
         "Source type",
@@ -241,11 +247,14 @@ with tab_qa:
 
     if st.button("Ask", type="primary", disabled=not question.strip()):
         with st.spinner("Retrieving and generating answer..."):
-            resp = api_post("/query", {
-                "question": question.strip(),
-                "video_id": selected_video_id,
-                "top_k": top_k,
-            })
+            resp = api_post(
+                "/query",
+                {
+                    "question": question.strip(),
+                    "video_id": selected_video_id,
+                    "top_k": top_k,
+                },
+            )
 
         if resp:
             st.subheader("Answer")
@@ -255,15 +264,18 @@ with tab_qa:
                 st.subheader(f"Sources ({len(resp['sources'])})")
                 for s in resp["sources"]:
                     deep_link = s.get("deep_link") or s.get("source_url", "#")
-                    st.markdown(f"""
+                    st.markdown(
+                        f"""
 <div class="result-card">
-<span class="citation-badge">[{s['index']}]</span>&nbsp;
-<strong>{s['title'][:60]}</strong>&nbsp;
-<span class="timestamp-badge">⏱ {s['start_ts']} – {s['end_ts']}</span>&nbsp;
-<span class="score-badge">score: {s['score']}</span><br>
+<span class="citation-badge">[{s["index"]}]</span>&nbsp;
+<strong>{s["title"][:60]}</strong>&nbsp;
+<span class="timestamp-badge">⏱ {s["start_ts"]} – {s["end_ts"]}</span>&nbsp;
+<span class="score-badge">score: {s["score"]}</span><br>
 <small><a href="{deep_link}" target="_blank">🔗 Open at timestamp</a></small>
 </div>
-""", unsafe_allow_html=True)
+""",
+                        unsafe_allow_html=True,
+                    )
 
 
 # ══════════════════════════════════════════════════════════════════════════════
@@ -273,9 +285,7 @@ with tab_search:
     st.header("Semantic Search")
     st.caption("Find relevant video segments by meaning, not just keywords.")
 
-    search_video_label = st.selectbox(
-        "Scope (optional)", list(video_options.keys()), key="search_scope"
-    )
+    search_video_label = st.selectbox("Scope (optional)", list(video_options.keys()), key="search_scope")
     search_video_id = video_options[search_video_label]
 
     query = st.text_input("Search query", placeholder="neural network training techniques")
@@ -288,15 +298,18 @@ with tab_search:
 
     if st.button("🔍 Search", type="primary", disabled=not query.strip()):
         with st.spinner("Searching..."):
-            resp = api_post("/search", {
-                "query": query.strip(),
-                "video_id": search_video_id,
-                "top_k": top_k_search,
-                "min_score": min_score,
-            })
+            resp = api_post(
+                "/search",
+                {
+                    "query": query.strip(),
+                    "video_id": search_video_id,
+                    "top_k": top_k_search,
+                    "min_score": min_score,
+                },
+            )
 
         if resp:
-            st.caption(f"Found {resp['total_results']} results for \"{resp['query']}\"")
+            st.caption(f'Found {resp["total_results"]} results for "{resp["query"]}"')
             for r in resp["results"]:
                 deep_link = r.get("deep_link") or r.get("source_url", "#")
                 with st.expander(
@@ -317,10 +330,7 @@ with tab_summarize:
     st.caption("Generate an overall summary and per-chapter breakdown using map-reduce.")
 
     if videos_data and videos_data.get("videos"):
-        video_choices = {
-            f"{v['title'][:60]} ({v['id'][:8]})": v
-            for v in videos_data["videos"]
-        }
+        video_choices = {f"{v['title'][:60]} ({v['id'][:8]})": v for v in videos_data["videos"]}
         selected_label = st.selectbox("Select a video", list(video_choices.keys()))
         selected_video = video_choices[selected_label]
 
@@ -328,10 +338,13 @@ with tab_summarize:
 
         if st.button("📝 Generate Summary", type="primary"):
             with st.spinner("Summarizing... this may take a minute for long videos."):
-                resp = api_post("/summarize", {
-                    "video_id": selected_video["id"],
-                    "include_chapters": include_chapters,
-                })
+                resp = api_post(
+                    "/summarize",
+                    {
+                        "video_id": selected_video["id"],
+                        "include_chapters": include_chapters,
+                    },
+                )
 
             if resp:
                 st.subheader(f"Summary: {resp['title']}")
@@ -373,7 +386,7 @@ with tab_library:
                     st.metric("Chunks", v.get("chunk_count", 0))
                 with col2:
                     dur = v.get("duration_seconds")
-                    st.metric("Duration", f"{int(dur//60)}m {int(dur%60)}s" if dur else "—")
+                    st.metric("Duration", f"{int(dur // 60)}m {int(dur % 60)}s" if dur else "—")
                 with col3:
                     st.metric("Language", v.get("language", "—").upper())
 
@@ -384,7 +397,7 @@ with tab_library:
                     st.error(f"Error: {v['error_message']}")
 
                 if v["status"] == "indexed":
-                    if st.button(f"🗑 Delete", key=f"del_{v['id']}"):
+                    if st.button("🗑 Delete", key=f"del_{v['id']}"):
                         result = httpx.delete(f"{API_BASE}/videos/{v['id']}", timeout=30)
                         if result.status_code == 200:
                             st.success("Deleted")

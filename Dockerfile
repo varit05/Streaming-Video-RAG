@@ -9,12 +9,14 @@ RUN apt-get update && apt-get install -y \
 
 WORKDIR /app
 
-COPY requirements.txt .
-RUN pip install --no-cache-dir -r requirements.txt
-
+# Copy all project files and install dependencies from pyproject.toml
 COPY . .
+RUN pip install --no-cache-dir .
 
 # Create data directories
 RUN mkdir -p data/audio data/transcripts data/chroma
 
 EXPOSE 8000 8501
+
+# Default command: run the Streamlit UI app
+CMD ["streamlit", "run", "ui/app.py", "--server.port=8501", "--server.address=0.0.0.0"]

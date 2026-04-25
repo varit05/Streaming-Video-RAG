@@ -13,9 +13,9 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from loguru import logger
 
+from api.routes import ingest, query, search, videos
 from config import settings
 from storage.database import init_db
-from api.routes import ingest, videos, query, search
 
 
 @asynccontextmanager
@@ -50,7 +50,7 @@ app = FastAPI(
 # ── CORS ─────────────────────────────────────────────────────────────────────
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],    # tighten this in production
+    allow_origins=["*"],  # tighten this in production
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -79,6 +79,7 @@ def health():
 
 if __name__ == "__main__":
     import uvicorn
+
     uvicorn.run(
         "api.main:app",
         host=settings.api_host,
@@ -89,5 +90,5 @@ if __name__ == "__main__":
         ssl_certfile=settings.api_ssl_certfile,
         ssl_keyfile=settings.api_ssl_keyfile,
         timeout_keep_alive=300,  # 5 minute timeout for long running tasks
-        timeout_graceful_shutdown=300
+        timeout_graceful_shutdown=300,
     )

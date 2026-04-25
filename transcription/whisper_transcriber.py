@@ -8,23 +8,24 @@ Local model size controlled by WHISPER_MODEL_SIZE (default: base).
 """
 
 import json
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from pathlib import Path
 from typing import Optional
 
 from loguru import logger
 from tenacity import retry, stop_after_attempt, wait_exponential
 
-from config import settings, WhisperMode
-
+from config import WhisperMode, settings
 
 # ── Data models ──────────────────────────────────────────────────────────────
+
 
 @dataclass
 class TranscriptSegment:
     """One time-bounded segment of transcribed speech."""
-    start: float        # seconds
-    end: float          # seconds
+
+    start: float  # seconds
+    end: float  # seconds
     text: str
 
     @property
@@ -48,6 +49,7 @@ class TranscriptSegment:
 @dataclass
 class Transcript:
     """Full transcript of a video, composed of time-stamped segments."""
+
     video_id: str
     language: str
     segments: list[TranscriptSegment]
@@ -57,15 +59,12 @@ class Transcript:
         if not self.full_text:
             self.full_text = " ".join(s.text.strip() for s in self.segments)
 
-    def to_dict(self) -> dict:
+    def to_dict(self) -> dict[str, object]:
         return {
             "video_id": self.video_id,
             "language": self.language,
             "full_text": self.full_text,
-            "segments": [
-                {"start": s.start, "end": s.end, "text": s.text}
-                for s in self.segments
-            ],
+            "segments": [{"start": s.start, "end": s.end, "text": s.text} for s in self.segments],
         }
 
     def save(self, path: Path) -> None:
@@ -76,10 +75,7 @@ class Transcript:
     @classmethod
     def load(cls, path: Path) -> "Transcript":
         data = json.loads(path.read_text())
-        segments = [
-            TranscriptSegment(s["start"], s["end"], s["text"])
-            for s in data["segments"]
-        ]
+        segments = [TranscriptSegment(s["start"], s["end"], s["text"]) for s in data["segments"]]
         return cls(
             video_id=data["video_id"],
             language=data["language"],
@@ -90,6 +86,7 @@ class Transcript:
 
 # ── Transcriber ──────────────────────────────────────────────────────────────
 
+
 class WhisperTranscriber:
     """
     Transcribes audio files using Whisper.
@@ -98,7 +95,7 @@ class WhisperTranscriber:
 
     def __init__(self):
         self.mode = settings.whisper_mode
-        self._local_model = None   # lazy-loaded
+        self._local_model = None  # lazy-loaded
 
     def transcribe(self, audio_path: Path, video_id: str, language: Optional[str] = None) -> Transcript:
         """
@@ -152,6 +149,7 @@ class WhisperTranscriber:
         """Lazy-load the Whisper model (avoids loading it until needed)."""
         if self._local_model is None:
             import whisper
+
             model_size = settings.whisper_model_size
             logger.info(f"[Whisper/local] Loading model: {model_size}")
             self._local_model = whisper.load_model(model_size)
@@ -167,7 +165,7 @@ class WhisperTranscriber:
         client = OpenAI(
             api_key=settings.openai_api_key,
             timeout=120.0,  # 2 minute timeout for API calls
-            max_retries=2
+            max_retries=2,
         )
 
         with open(audio_path, "rb") as f:

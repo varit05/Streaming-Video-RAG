@@ -4,20 +4,31 @@ Accepts any video format that ffmpeg can read (.mp4, .mov, .avi, .mkv, .webm, et
 and extracts 16kHz mono WAV audio for transcription.
 """
 
-import subprocess
 from pathlib import Path
 from typing import Optional
 
 import ffmpeg
 from loguru import logger
 
-from .base import BaseIngester, VideoAsset, SourceType
-
+from .base import BaseIngester, SourceType, VideoAsset
 
 SUPPORTED_EXTENSIONS = {
-    ".mp4", ".mov", ".avi", ".mkv", ".webm",
-    ".m4v", ".flv", ".wmv", ".ts", ".mts",
-    ".mp3", ".m4a", ".aac", ".ogg", ".wav", ".flac",  # audio-only files too
+    ".mp4",
+    ".mov",
+    ".avi",
+    ".mkv",
+    ".webm",
+    ".m4v",
+    ".flv",
+    ".wmv",
+    ".ts",
+    ".mts",
+    ".mp3",
+    ".m4a",
+    ".aac",
+    ".ogg",
+    ".wav",
+    ".flac",  # audio-only files too
 }
 
 
@@ -27,14 +38,31 @@ class LocalFileIngester(BaseIngester):
     Uses ffmpeg-python to probe metadata and extract audio.
     """
 
+    def _resolve_source_path(self, source: str) -> Path:
+        """Normalize a user-provided path string for the current OS."""
+        source = source.strip().strip('"').strip("'")
+        # Convert Windows backslashes to forward slashes so Pathlib handles them
+        source = source.replace("\\", "/")
+        path = Path(source).expanduser()
+        # If the path is not absolute and doesn't exist, try resolving from cwd
+        if not path.is_absolute() and not path.exists():
+            path = Path.cwd() / path
+        return path
+
     def validate(self, source: str) -> bool:
-        path = Path(source)
+        path = self._resolve_source_path(source)
         return path.exists() and path.suffix.lower() in SUPPORTED_EXTENSIONS
 
     def ingest(self, source: str, video_id: Optional[str] = None) -> VideoAsset:
-        source_path = Path(source)
+        print("Source ", source)
+        source_path = self._resolve_source_path(source)
         if not source_path.exists():
-            raise FileNotFoundError(f"File not found: {source}")
+            raise FileNotFoundError(
+                f"File not found: {source}\n"
+                f"  Resolved to: {source_path}\n"
+                f"  Absolute:    {source_path.resolve() if not source_path.is_absolute() else source_path}\n"
+                f"  CWD:         {Path.cwd()}"
+            )
 
         if video_id is None:
             video_id = VideoAsset.generate_id()
@@ -49,10 +77,7 @@ class LocalFileIngester(BaseIngester):
         self._extract_audio(source_path, audio_path)
 
         duration = float(metadata.get("format", {}).get("duration", 0)) or None
-        title = (
-            metadata.get("format", {}).get("tags", {}).get("title")
-            or source_path.stem
-        )
+        title = metadata.get("format", {}).get("tags", {}).get("title") or source_path.stem
 
         logger.success(f"[LocalFile] Done → {audio_path}")
 
@@ -72,7 +97,7 @@ class LocalFileIngester(BaseIngester):
 
     # ── Private helpers ──────────────────────────────────────────────────────
 
-    def _probe(self, path: Path) -> dict:
+    def _probe(self, path: Path) -> dict[str, object]:
         """Use ffprobe to extract duration and tag metadata."""
         try:
             return ffmpeg.probe(str(path))
@@ -84,12 +109,11 @@ class LocalFileIngester(BaseIngester):
         """Extract audio to 16kHz mono WAV using ffmpeg."""
         try:
             (
-                ffmpeg
-                .input(str(source))
+                ffmpeg.input(str(source))
                 .output(
                     str(output),
-                    ar=16000,   # 16kHz — optimal for Whisper
-                    ac=1,       # mono
+                    ar=16000,  # 16kHz — optimal for Whisper
+                    ac=1,  # mono
                     acodec="pcm_s16le",
                 )
                 .overwrite_output()

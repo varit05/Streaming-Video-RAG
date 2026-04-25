@@ -5,15 +5,13 @@ and then combining them into a final summary.
 """
 
 from dataclasses import dataclass
-from typing import Optional
 
 from langchain_core.messages import HumanMessage, SystemMessage
+from vector_store import SearchResult
 from loguru import logger
 
 from llm.factory import get_llm
 from vector_store import get_vector_store
-from processing.embedder import Embedder
-
 
 MAP_SYSTEM = "You are a concise summarizer of video transcript excerpts."
 
@@ -51,10 +49,11 @@ Chapters and their transcript content:
 @dataclass
 class VideoSummary:
     """Result of summarizing a video."""
+
     video_id: str
     title: str
     overall_summary: str
-    chapter_summaries: list[dict] = None   # [{chapter, summary}]
+    chapter_summaries: list[dict[str, str]] | None = None  # [{chapter, summary}]
     chunk_count: int = 0
 
 
@@ -87,7 +86,10 @@ class Summarizer:
 
         # ── Fetch all chunks for this video ───────────────────────────────────
         # We retrieve ALL chunks (not just top-k) by using a high limit
-        dummy_vector = [0.0] * Embedder().dimension
+        from config import EmbeddingMode, settings
+
+        dim = 1536 if settings.embedding_mode == EmbeddingMode.OPENAI else 384
+        dummy_vector = [0.0] * dim
         all_results = self.store.search(dummy_vector, top_k=9999, filter_video_id=video_id)
 
         # Sort by start time
@@ -127,7 +129,7 @@ class Summarizer:
 
     # ── Private helpers ──────────────────────────────────────────────────────
 
-    def _map_chunks(self, results) -> list[str]:
+    def _map_chunks(self, results: list[SearchResult]) -> list[str]:
         """Summarize each chunk individually (map phase)."""
         llm = get_llm(temperature=0.2)
         summaries = []
@@ -146,12 +148,12 @@ class Summarizer:
     def _reduce(self, summaries: list[str], title: str) -> str:
         """Combine chunk summaries into a final overall summary (reduce phase)."""
         llm = get_llm(temperature=0.3)
-        combined = "\n\n".join(f"[Section {i+1}] {s}" for i, s in enumerate(summaries))
+        combined = "\n\n".join(f"[Section {i + 1}] {s}" for i, s in enumerate(summaries))
         prompt = REDUCE_TEMPLATE.format(title=title, summaries=combined)
         response = llm.invoke([SystemMessage(content=REDUCE_SYSTEM), HumanMessage(content=prompt)])
         return response.content.strip()
 
-    def _group_by_chapter(self, results) -> dict[str, list]:
+    def _group_by_chapter(self, results: list[SearchResult]) -> dict[str, list[SearchResult]]:
         """Group chunks by their chapter label."""
         grouped = {}
         for r in results:
@@ -159,18 +161,17 @@ class Summarizer:
             grouped.setdefault(key, []).append(r)
         return grouped
 
-    def _summarize_chapters(self, chapters: dict[str, list]) -> list[dict]:
+    def _summarize_chapters(self, chapters: dict[str, list[SearchResult]]) -> list[dict[str, str]]:
         """Generate a brief summary for each chapter."""
         llm = get_llm(temperature=0.2)
         chapter_content = "\n\n".join(
-            f"Chapter: {ch}\nContent: {' '.join(r.chunk.text for r in chunks[:3])}"
-            for ch, chunks in chapters.items()
+            f"Chapter: {ch}\nContent: {' '.join(r.chunk.text for r in chunks[:3])}" for ch, chunks in chapters.items()
         )
         prompt = CHAPTER_TEMPLATE.format(chapter_content=chapter_content)
         response = llm.invoke([SystemMessage(content=MAP_SYSTEM), HumanMessage(content=prompt)])
 
         result = []
-        for ch in chapters.keys():
+        for ch in chapters:
             result.append({"chapter": ch, "summary": ""})
 
         # Parse the response text to extract per-chapter summaries

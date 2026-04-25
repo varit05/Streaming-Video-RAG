@@ -3,7 +3,7 @@ Q&A chain — answers questions grounded in retrieved video transcript chunks.
 Returns the answer text plus citations (video title + timestamp for each source).
 """
 
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from typing import Optional
 
 from langchain_core.messages import HumanMessage, SystemMessage
@@ -11,8 +11,8 @@ from loguru import logger
 
 from llm.factory import get_llm
 from vector_store import SearchResult
-from .retriever import Retriever
 
+from .retriever import get_retriever
 
 SYSTEM_PROMPT = """\
 You are a helpful assistant that answers questions based on video transcript content.
@@ -42,13 +42,14 @@ Please answer based on the transcript excerpts above. If citing a source, refere
 @dataclass
 class QAResult:
     """Result of a Q&A query."""
+
     question: str
     answer: str
     sources: list[SearchResult]
     video_id: Optional[str] = None
 
     @property
-    def source_citations(self) -> list[dict]:
+    def source_citations(self) -> list[dict[str, object]]:
         return [
             {
                 "index": i + 1,
@@ -71,7 +72,7 @@ class QAChain:
     """
 
     def __init__(self):
-        self.retriever = Retriever()
+        self.retriever = get_retriever()
 
     def ask(
         self,

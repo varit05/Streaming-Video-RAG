@@ -11,7 +11,7 @@ from typing import Optional
 
 from loguru import logger
 
-from .base import BaseIngester, VideoAsset, SourceType
+from .base import BaseIngester, SourceType, VideoAsset
 
 
 class YouTubeIngester(BaseIngester):
@@ -21,10 +21,13 @@ class YouTubeIngester(BaseIngester):
     """
 
     SUPPORTED_DOMAINS = [
-        "youtube.com", "youtu.be", "youtube-nocookie.com",
-        "vimeo.com",     # public Vimeo links
-        "twitch.tv",     # VODs
-        "twitter.com", "x.com",
+        "youtube.com",
+        "youtu.be",
+        "youtube-nocookie.com",
+        "vimeo.com",  # public Vimeo links
+        "twitch.tv",  # VODs
+        "twitter.com",
+        "x.com",
         "reddit.com",
         "dailymotion.com",
     ]
@@ -49,7 +52,7 @@ class YouTubeIngester(BaseIngester):
         # ── Step 3: extract chapters if present ───────────────────────────────
         chapters = [
             {
-                "title": ch.get("title", f"Chapter {i+1}"),
+                "title": ch.get("title", f"Chapter {i + 1}"),
                 "start": ch.get("start_time", 0),
                 "end": ch.get("end_time", 0),
             }
@@ -79,7 +82,7 @@ class YouTubeIngester(BaseIngester):
 
     # ── Private helpers ──────────────────────────────────────────────────────
 
-    def _fetch_metadata(self, url: str) -> dict:
+    def _fetch_metadata(self, url: str) -> dict[str, object]:
         """Run yt-dlp in dump-only mode to get video metadata as JSON."""
         try:
             result = subprocess.run(
@@ -105,11 +108,16 @@ class YouTubeIngester(BaseIngester):
             "yt-dlp",
             "--no-playlist",
             "--extract-audio",
-            "--audio-format", "wav",
-            "--audio-quality", "0",
-            "--js-runtimes", "node,deno",
-            "--postprocessor-args", "ffmpeg:-ar 16000 -ac 1",
-            "-o", str(output_path.with_suffix("")),  # yt-dlp adds extension
+            "--audio-format",
+            "wav",
+            "--audio-quality",
+            "0",
+            "--js-runtimes",
+            "node,deno",
+            "--postprocessor-args",
+            "ffmpeg:-ar 16000 -ac 1",
+            "-o",
+            str(output_path.with_suffix("")),  # yt-dlp adds extension
             url,
         ]
         logger.debug(f"[YouTube] Running: {' '.join(cmd)}")

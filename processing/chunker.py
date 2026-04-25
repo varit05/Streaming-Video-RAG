@@ -23,17 +23,18 @@ class VideoChunk:
     A single embeddable unit of video content.
     Carries enough metadata to reconstruct a deep link to the source video.
     """
+
     chunk_id: str
     video_id: str
     text: str
-    start_time: float       # seconds
-    end_time: float         # seconds
-    segment_index: int      # position among all chunks for this video
+    start_time: float  # seconds
+    end_time: float  # seconds
+    segment_index: int  # position among all chunks for this video
     title: str = ""
     source_url: str = ""
     chapter: Optional[str] = None
     language: str = "en"
-    extra_metadata: dict = field(default_factory=dict)
+    extra_metadata: dict[str, object] = field(default_factory=dict)
 
     @property
     def duration(self) -> float:
@@ -60,7 +61,7 @@ class VideoChunk:
             return f"{base}{sep}t={t}"
         return None
 
-    def to_metadata_dict(self) -> dict:
+    def to_metadata_dict(self) -> dict[str, str | float | int]:
         """Returns the flat dict stored alongside the embedding in the vector DB."""
         return {
             "chunk_id": self.chunk_id,
@@ -171,7 +172,7 @@ class Chunker:
 
     # ── Private helpers ──────────────────────────────────────────────────────
 
-    def _get_chapter(self, time: float, chapters: list[dict]) -> Optional[str]:
+    def _get_chapter(self, time: float, chapters: list[dict[str, str | float]]) -> Optional[str]:
         """Return the chapter title for the given timestamp, if chapters exist."""
         for ch in chapters:
             if ch.get("start", 0) <= time < ch.get("end", float("inf")):

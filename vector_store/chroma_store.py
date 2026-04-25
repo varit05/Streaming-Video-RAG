@@ -11,14 +11,13 @@ from loguru import logger
 
 from config import settings
 from processing.chunker import VideoChunk
-from .base import BaseVectorStore, SearchResult
 
+from .base import BaseVectorStore, SearchResult
 
 COLLECTION_NAME = "video_rag"
 
 
 class ChromaVectorStore(BaseVectorStore):
-
     def __init__(self):
         self._client = chromadb.PersistentClient(
             path=settings.chroma_persist_dir,
