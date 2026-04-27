@@ -78,7 +78,7 @@ class QAChain:
         self,
         question: str,
         video_id: Optional[str] = None,
-        top_k: int = None,
+        top_k: Optional[int] = None,
     ) -> QAResult:
         """
         Answer a question using retrieved video transcript context.

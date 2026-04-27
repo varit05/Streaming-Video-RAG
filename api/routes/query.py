@@ -2,8 +2,11 @@
 /query and /summarize routes — RAG-powered Q&A and summarization.
 """
 
-from fastapi import APIRouter
+from typing import Annotated
+
+from fastapi import APIRouter, Depends, HTTPException
 from loguru import logger
+from sqlalchemy.orm import Session
 
 from api.models import (
     ChapterSummary,
@@ -14,6 +17,7 @@ from api.models import (
     SummarizeResponse,
 )
 from rag import QAChain, Summarizer
+from storage.database import Video, get_db
 
 router = APIRouter(tags=["RAG"])
 
@@ -42,17 +46,22 @@ def query_videos(request: QueryRequest):
     )
 
 
-@router.post("/summarize", response_model=SummarizeResponse)
-def summarize_video(request: SummarizeRequest):
+@router.post("/summarize", response_model=SummarizeResponse, responses={404: {"description": "Video not found"}})
+def summarize_video(request: SummarizeRequest, db: Annotated[Session, Depends(get_db)]):
     """
     Generate a summary of an indexed video.
     Uses map-reduce to handle long videos gracefully.
     """
     logger.info(f"[API/summarize] video_id={request.video_id}")
 
+    video = db.query(Video).filter(Video.id == request.video_id).first()
+    if not video:
+        raise HTTPException(status_code=404, detail=f"Video {request.video_id!r} not found")
+
     summarizer = Summarizer()
     result = summarizer.summarize(
         video_id=request.video_id,
+        title=video.title,
         include_chapters=request.include_chapters,
     )
 

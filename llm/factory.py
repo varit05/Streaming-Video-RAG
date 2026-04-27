@@ -70,12 +70,15 @@ def _openai_llm(temperature: float):
 def _anthropic_llm(temperature: float):
     from langchain_anthropic import ChatAnthropic
 
-    return ChatAnthropic(
-        model=settings.llm_model,
-        temperature=temperature,
-        api_key=settings.anthropic_api_key,
-        streaming=True,
-    )
+    # Opus 4.7+ removes temperature/top_p/top_k at the API level (returns 400 if sent).
+    kwargs: dict = {
+        "model": settings.llm_model,
+        "api_key": settings.anthropic_api_key,
+        "streaming": True,
+    }
+    if not settings.llm_model.startswith("claude-opus-4-7"):
+        kwargs["temperature"] = temperature
+    return ChatAnthropic(**kwargs)
 
 
 def _ollama_llm(temperature: float):
