@@ -101,10 +101,30 @@ packages = ["api", "ingestion", "llm", "processing", "rag", "storage", "transcri
 [tool.black]
 line-length = 120
 target-version = ["py310", "py311", "py312", "py313", "py314"]
+exclude = '''
+/(
+  build
+  | dist
+  | __pycache__
+  | .git
+  | .venv
+  | venv
+  | node_modules
+)/
+'''
 
 [tool.ruff]
 line-length = 120
 target-version = "py314"
+exclude = [
+  "build/",
+  "dist/",
+  "__pycache__/",
+  ".git/",
+  ".venv/",
+  "venv/",
+  "node_modules/",
+]
 
 [tool.ruff.lint]
 select = ["E", "F", "I", "B", "C4", "SIM"]
@@ -115,3 +135,11 @@ python_version = "3.14"
 strict = true
 ignore_missing_imports = true
 disallow_untyped_defs = false
+no_implicit_optional = true
+exclude = [
+  "build/",
+  "dist/",
+  "__pycache__/",
+  ".venv/",
+  "venv/",
+]
