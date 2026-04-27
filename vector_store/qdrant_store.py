@@ -29,13 +29,13 @@ class QdrantVectorStore(BaseVectorStore):
             "url": settings.qdrant_url,
             "timeout": 30,
         }
-        
+
         if settings.qdrant_api_key:
             client_kwargs["api_key"] = settings.qdrant_api_key
-            
+
         if settings.qdrant_https:
             client_kwargs["https"] = True
-            
+
         self._client = QdrantClient(**client_kwargs)
         self._collection = settings.qdrant_collection
         # Infer dimension from embedder
