@@ -91,8 +91,8 @@ class Chunker:
 
     def __init__(
         self,
-        chunk_duration: int = None,
-        chunk_overlap: int = None,
+        chunk_duration: Optional[int] = None,
+        chunk_overlap: Optional[int] = None,
     ):
         self.chunk_duration = chunk_duration or settings.chunk_duration_seconds
         self.chunk_overlap = chunk_overlap or settings.chunk_overlap_seconds
@@ -175,6 +175,9 @@ class Chunker:
     def _get_chapter(self, time: float, chapters: list[dict[str, str | float]]) -> Optional[str]:
         """Return the chapter title for the given timestamp, if chapters exist."""
         for ch in chapters:
-            if ch.get("start", 0) <= time < ch.get("end", float("inf")):
-                return ch.get("title")
+            start = float(ch.get("start", 0))
+            end = float(ch.get("end", float("inf")))
+            if start <= time < end:
+                title = ch.get("title")
+                return str(title) if title is not None else None
         return None
