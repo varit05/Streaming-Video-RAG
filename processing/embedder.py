@@ -53,10 +53,7 @@ class Embedder:
         texts = [c.text for c in chunks]
         logger.info(f"[Embedder/{self.mode.value}] Embedding {len(texts)} chunks...")
 
-        if self.mode == EmbeddingMode.LOCAL:
-            vectors = self._embed_local(texts)
-        else:
-            vectors = self._embed_openai(texts)
+        vectors = self._embed_local(texts) if self.mode == EmbeddingMode.LOCAL else self._embed_openai(texts)
 
         logger.success(f"[Embedder] Done — {len(vectors)} vectors, dim={self.dimension}")
         return vectors

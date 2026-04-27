@@ -7,11 +7,10 @@ and then combining them into a final summary.
 from dataclasses import dataclass
 
 from langchain_core.messages import HumanMessage, SystemMessage
-from vector_store import SearchResult
 from loguru import logger
 
 from llm.factory import get_llm
-from vector_store import get_vector_store
+from vector_store import SearchResult, get_vector_store
 
 MAP_SYSTEM = "You are a concise summarizer of video transcript excerpts."
 

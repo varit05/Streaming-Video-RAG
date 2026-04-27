@@ -122,4 +122,4 @@ class LiveStreamIngester(BaseIngester):
             )
         except ffmpeg.Error as e:
             stderr = e.stderr.decode() if e.stderr else str(e)
-            raise RuntimeError(f"ffmpeg stream capture failed: {stderr[:500]}")
+            raise RuntimeError(f"ffmpeg stream capture failed: {stderr[:500]}") from e

@@ -63,7 +63,7 @@ class QdrantVectorStore(BaseVectorStore):
                 vector=emb,
                 payload={**c.to_metadata_dict(), "text": c.text},
             )
-            for c, emb in zip(chunks, embeddings)
+            for c, emb in zip(chunks, embeddings, strict=False)
         ]
 
         self._client.upsert(collection_name=self._collection, points=points)
