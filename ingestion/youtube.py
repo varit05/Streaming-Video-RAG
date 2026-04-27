@@ -7,7 +7,7 @@ Twitter/X videos, direct video URLs, etc.
 import json
 import subprocess
 from pathlib import Path
-from typing import Optional
+from typing import Optional, Any, cast
 
 from loguru import logger
 
@@ -50,7 +50,7 @@ class YouTubeIngester(BaseIngester):
         self._download_audio(source, audio_path)
 
         # ── Step 3: extract chapters if present ───────────────────────────────
-        chapters = [
+        chapters: list[dict[str, Any]] = [
             {
                 "title": ch.get("title", f"Chapter {i + 1}"),
                 "start": ch.get("start_time", 0),
@@ -82,7 +82,7 @@ class YouTubeIngester(BaseIngester):
 
     # ── Private helpers ──────────────────────────────────────────────────────
 
-    def _fetch_metadata(self, url: str) -> dict[str, object]:
+    def _fetch_metadata(self, url: str) -> dict[str, Any]:
         """Run yt-dlp in dump-only mode to get video metadata as JSON."""
         try:
             result = subprocess.run(

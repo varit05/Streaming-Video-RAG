@@ -8,7 +8,7 @@ Each platform is a subclass of VideoAPIIngester. The factory function
 
 import subprocess
 from pathlib import Path
-from typing import Optional
+from typing import Optional, Any
 
 import requests
 from loguru import logger
@@ -95,7 +95,7 @@ class VimeoIngester(VideoAPIIngester):
         parts = url.rstrip("/").split("/")
         return parts[-1]
 
-    def _fetch_metadata(self, vimeo_id: str) -> dict[str, object]:
+    def _fetch_metadata(self, vimeo_id: str) -> dict[str, Any]:
         try:
             resp = self.session.get(f"{self.API_BASE}/videos/{vimeo_id}", timeout=30)
             resp.raise_for_status()
@@ -197,7 +197,7 @@ class TwitchIngester(VideoAPIIngester):
         parts = url.rstrip("/").split("/")
         return parts[-1].replace("v", "")
 
-    def _fetch_vod_metadata(self, vod_id: str) -> dict[str, object]:
+    def _fetch_vod_metadata(self, vod_id: str) -> dict[str, Any]:
         try:
             resp = self.session.get(f"{self.API_BASE}/videos", params={"id": vod_id}, timeout=30)
             resp.raise_for_status()

@@ -5,7 +5,7 @@ and extracts 16kHz mono WAV audio for transcription.
 """
 
 from pathlib import Path
-from typing import Optional
+from typing import Optional, Any
 
 import ffmpeg
 from loguru import logger
@@ -97,7 +97,7 @@ class LocalFileIngester(BaseIngester):
 
     # ── Private helpers ──────────────────────────────────────────────────────
 
-    def _probe(self, path: Path) -> dict[str, object]:
+    def _probe(self, path: Path) -> dict[str, Any]:
         """Use ffprobe to extract duration and tag metadata."""
         try:
             return ffmpeg.probe(str(path))
