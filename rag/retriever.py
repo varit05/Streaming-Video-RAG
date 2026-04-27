@@ -35,7 +35,7 @@ class Retriever:
     def retrieve(
         self,
         query: str,
-        top_k: int = None,
+        top_k: Optional[int] = None,
         video_id: Optional[str] = None,
     ) -> list[SearchResult]:
         """

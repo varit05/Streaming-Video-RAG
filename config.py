@@ -43,7 +43,7 @@ class Settings(BaseSettings):
     # ── Whisper transcription ─────────────────────────────────────────────
     whisper_mode: WhisperMode = WhisperMode.LOCAL
     # Local model size: tiny | base | small | medium | large | large-v2
-    whisper_model_size: str = "base"
+    whisper_model_size: str = "large-v2"
 
     # ── Embeddings ────────────────────────────────────────────────────────
     embedding_mode: EmbeddingMode = EmbeddingMode.LOCAL
@@ -54,7 +54,9 @@ class Settings(BaseSettings):
     vector_store_type: VectorStoreType = VectorStoreType.CHROMA
     chroma_persist_dir: str = "./data/chroma"
     qdrant_url: str = "http://localhost:6333"
+    qdrant_api_key: str = ""
     qdrant_collection: str = "video_rag"
+    qdrant_https: bool = False
 
     # ── Storage ───────────────────────────────────────────────────────────
     database_url: str = "sqlite:///./data/video_rag.db"

@@ -68,6 +68,9 @@ class ChromaVectorStore(BaseVectorStore):
         distances = results["distances"][0]
 
         for i, (doc_id, text, meta, dist) in enumerate(zip(ids, docs, metas, distances)):
+            if not meta or "video_id" not in meta:
+                logger.warning(f"[Chroma] Skipping result {doc_id!r} — missing metadata")
+                continue
             # Chroma returns cosine distance (0=identical, 2=opposite)
             # Convert to similarity score: 1 - dist/2
             score = max(0.0, 1.0 - dist / 2.0)
