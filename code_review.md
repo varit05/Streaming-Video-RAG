@@ -22,7 +22,7 @@ This project uses modern Python tooling for code quality. All rules are enforced
 ### 2. **Black** (Code Formatter)
 - **Purpose**: Uncompromising code formatting
 - **Line Length**: 120 characters
-- **Target Python Versions**: 3.10 - 3.14
+- **Target Python Versions**: 3.14
 - **Rule**: No manual formatting - Black decides code style
 
 ### 3. **Mypy** (Static Type Checker)
@@ -30,7 +30,7 @@ This project uses modern Python tooling for code quality. All rules are enforced
 - **Mode**: Strict mode enabled
 - **Configuration**:
   - ✅ `strict = true`
-  - ✅ `python_version = 3.10`
+  - ✅ `python_version = 3.14`
   - ⚠️ `ignore_missing_imports = true` (temporary for external libraries)
   - 🚧 `disallow_untyped_defs = false` (WILL BE ENABLED SOON)
 

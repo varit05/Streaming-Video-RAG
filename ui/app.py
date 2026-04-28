@@ -189,10 +189,7 @@ with tab_ingest:
     with col1:
         language = st.text_input("Language (optional)", placeholder="en, es, fr, de, ...")
     with col2:
-        if "Video API" in source_type:
-            platform = st.selectbox("Platform", ["vimeo", "twitch"])
-        else:
-            platform = None
+        platform = st.selectbox("Platform", ["vimeo", "twitch"]) if "Video API" in source_type else None
 
     source_type_map = {
         "YouTube / URL": "youtube",
@@ -396,13 +393,12 @@ with tab_library:
                 if v.get("error_message"):
                     st.error(f"Error: {v['error_message']}")
 
-                if v["status"] == "indexed":
-                    if st.button("🗑 Delete", key=f"del_{v['id']}"):
-                        result = httpx.delete(f"{API_BASE}/videos/{v['id']}", timeout=30)
-                        if result.status_code == 200:
-                            st.success("Deleted")
-                            st.rerun()
-                        else:
-                            st.error("Delete failed")
+                if v["status"] == "indexed" and st.button("🗑 Delete", key=f"del_{v['id']}"):
+                    result = httpx.delete(f"{API_BASE}/videos/{v['id']}", timeout=30)
+                    if result.status_code == 200:
+                        st.success("Deleted")
+                        st.rerun()
+                    else:
+                        st.error("Delete failed")
     else:
         st.info("No videos in the library yet. Head to the Ingest tab to add your first video.")

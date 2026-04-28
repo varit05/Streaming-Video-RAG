@@ -6,6 +6,7 @@ Ingestion runs as a FastAPI background task to avoid blocking the request.
 import threading
 from datetime import datetime
 from pathlib import Path
+from typing import Annotated
 
 from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException
 from loguru import logger
@@ -18,12 +19,14 @@ from storage.database import IngestJob, Video, get_db
 
 router = APIRouter(prefix="/ingest", tags=["Ingestion"])
 
+DbSession = Annotated[Session, Depends(get_db)]
+
 
 @router.post("", response_model=IngestResponse)
 def submit_ingest(
     request: IngestRequest,
     background_tasks: BackgroundTasks,
-    db: Session = Depends(get_db),
+    db: DbSession,
 ):
     """
     Submit a video source for ingestion.
@@ -60,7 +63,7 @@ def submit_ingest(
 
 
 @router.get("/{job_id}", response_model=JobStatusResponse)
-def get_job_status(job_id: str, db: Session = Depends(get_db)):
+def get_job_status(job_id: str, db: DbSession):
     """Poll the status of an ingestion job."""
     job = db.query(IngestJob).filter(IngestJob.id == job_id).first()
     if not job:

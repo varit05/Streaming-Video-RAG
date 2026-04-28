@@ -120,4 +120,4 @@ class LocalFileIngester(BaseIngester):
                 .run(quiet=True)
             )
         except ffmpeg.Error as e:
-            raise RuntimeError(f"ffmpeg audio extraction failed: {e.stderr.decode()}")
+            raise RuntimeError(f"ffmpeg audio extraction failed: {e.stderr.decode()}") from e

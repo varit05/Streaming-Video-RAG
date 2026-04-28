@@ -16,7 +16,7 @@ This project provides an end-to-end pipeline for processing video content (local
 - 🔌 REST API for integration
 
 ## 📋 Requirements
-- Python 3.10+
+- Python 3.14+
 - FFmpeg (for audio extraction)
 - LLM Provider (OpenAI API Key **OR** Local Ollama installation)
 

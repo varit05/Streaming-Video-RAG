@@ -29,7 +29,7 @@ def search_videos(request: SearchRequest):
         )
     except RuntimeError as e:
         logger.error(f"[API/search] Retrieval error: {e}")
-        raise HTTPException(status_code=503, detail=str(e))
+        raise HTTPException(status_code=503, detail=str(e)) from e
 
     return SearchResponse(
         query=result.query,

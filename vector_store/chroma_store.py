@@ -67,7 +67,7 @@ class ChromaVectorStore(BaseVectorStore):
         metas = results["metadatas"][0]
         distances = results["distances"][0]
 
-        for i, (doc_id, text, meta, dist) in enumerate(zip(ids, docs, metas, distances)):
+        for i, (doc_id, text, meta, dist) in enumerate(zip(ids, docs, metas, distances, strict=False)):
             if not meta or "video_id" not in meta:
                 logger.warning(f"[Chroma] Skipping result {doc_id!r} — missing metadata")
                 continue
