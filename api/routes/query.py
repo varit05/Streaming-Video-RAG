@@ -23,7 +23,7 @@ router = APIRouter(tags=["RAG"])
 
 
 @router.post("/query", response_model=QueryResponse)
-def query_videos(request: QueryRequest):
+def query_videos(request: QueryRequest) -> QueryResponse:
     """
     Ask a question and get an answer grounded in indexed video content.
     Returns the answer plus timestamped source citations.
@@ -37,7 +37,7 @@ def query_videos(request: QueryRequest):
         top_k=request.top_k,
     )
 
-    sources = [SourceCitation(**s) for s in result.source_citations]
+    sources = [SourceCitation.model_validate(s) for s in result.source_citations]
 
     return QueryResponse(
         question=result.question,
@@ -47,7 +47,7 @@ def query_videos(request: QueryRequest):
 
 
 @router.post("/summarize", response_model=SummarizeResponse, responses={404: {"description": "Video not found"}})
-def summarize_video(request: SummarizeRequest, db: Annotated[Session, Depends(get_db)]):
+def summarize_video(request: SummarizeRequest, db: Annotated[Session, Depends(get_db)]) -> SummarizeResponse:
     """
     Generate a summary of an indexed video.
     Uses map-reduce to handle long videos gracefully.
@@ -61,7 +61,7 @@ def summarize_video(request: SummarizeRequest, db: Annotated[Session, Depends(ge
     summarizer = Summarizer()
     result = summarizer.summarize(
         video_id=request.video_id,
-        title=video.title,
+        title=str(video.title),
         include_chapters=request.include_chapters,
     )
 

@@ -11,8 +11,8 @@ from rag import SearchEngine
 router = APIRouter(tags=["Search"])
 
 
-@router.post("/search", response_model=SearchResponse)
-def search_videos(request: SearchRequest):
+@router.post("/search")
+def search_videos(request: SearchRequest) -> SearchResponse:
     """
     Semantic search across all indexed videos.
     Returns ranked video segments with timestamps.
@@ -34,5 +34,5 @@ def search_videos(request: SearchRequest):
     return SearchResponse(
         query=result.query,
         total_results=result.total_results,
-        results=[SearchResultItem(**r) for r in result.results],
+        results=[SearchResultItem.model_validate(r) for r in result.results],
     )

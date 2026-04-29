@@ -125,7 +125,7 @@ class WhisperTranscriber:
         """Run openai-whisper locally."""
         model = self._get_local_model()
 
-        kwargs = {"verbose": False}
+        kwargs: dict[str, bool | str] = {"verbose": False}
         if language:
             kwargs["language"] = language
 

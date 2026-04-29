@@ -19,7 +19,7 @@ from storage.database import init_db
 
 
 @asynccontextmanager
-async def lifespan(app: FastAPI):
+async def lifespan(app: FastAPI): # type: ignore
     """Startup and shutdown events."""
     # Startup
     logger.info("Starting Streaming Video-RAG API...")
@@ -65,7 +65,7 @@ app.include_router(search.router)
 
 # ── Health check ──────────────────────────────────────────────────────────────
 @app.get("/health", tags=["System"])
-def health():
+def health() -> dict[str, str]:
     return {
         "status": "ok",
         "llm_provider": settings.llm_provider.value,
@@ -86,7 +86,6 @@ if __name__ == "__main__":
         port=settings.api_port,
         reload=settings.api_reload,
         http="h11",
-        h2=settings.api_http2,
         ssl_certfile=settings.api_ssl_certfile,
         ssl_keyfile=settings.api_ssl_keyfile,
         timeout_keep_alive=300,  # 5 minute timeout for long running tasks

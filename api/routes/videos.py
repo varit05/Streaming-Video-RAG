@@ -2,7 +2,7 @@
 /videos routes — list and manage indexed videos.
 """
 
-from typing import Annotated
+from typing import Annotated, Optional
 
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
@@ -19,10 +19,10 @@ DbSession = Annotated[Session, Depends(get_db)]
 @router.get("", response_model=VideoListResponse)
 def list_videos(
     db: DbSession,
-    status: str = None,
+    status: Optional[str] = None,
     limit: int = 50,
     offset: int = 0,
-):
+) -> VideoListResponse:
     """List all indexed videos, optionally filtered by status."""
     query = db.query(Video)
     if status:
@@ -32,21 +32,21 @@ def list_videos(
 
     return VideoListResponse(
         total=total,
-        videos=[VideoResponse(**v.to_dict()) for v in videos],
+        videos=[VideoResponse.model_validate(v.to_dict()) for v in videos],
     )
 
 
 @router.get("/{video_id}", response_model=VideoResponse)
-def get_video(video_id: str, db: DbSession):
+def get_video(video_id: str, db: DbSession) -> VideoResponse:
     """Get metadata for a specific video."""
     video = db.query(Video).filter(Video.id == video_id).first()
     if not video:
         raise HTTPException(status_code=404, detail=f"Video {video_id} not found")
-    return VideoResponse(**video.to_dict())
+    return VideoResponse.model_validate(video.to_dict())
 
 
 @router.delete("/{video_id}")
-def delete_video(video_id: str, db: DbSession):
+def delete_video(video_id: str, db: DbSession) -> dict[str, str | int]:
     """
     Remove a video from the database and delete all its embeddings
     from the vector store.
