@@ -6,12 +6,9 @@ authors = [
   { name = "Streaming Video-RAG Team" }
 ]
 readme = "README.md"
-requires-python = ">=3.11"
+requires-python = "==3.14.*"
 classifiers = [
   "Programming Language :: Python :: 3",
-  "Programming Language :: Python :: 3.11",
-  "Programming Language :: Python :: 3.12",
-  "Programming Language :: Python :: 3.13",
   "Programming Language :: Python :: 3.14",
   "License :: OSI Approved :: MIT License",
   "Operating System :: OS Independent",
@@ -104,7 +101,7 @@ packages = ["api", "ingestion", "llm", "processing", "rag", "storage", "transcri
 
 [tool.black]
 line-length = 120
-target-version = ["py310", "py311", "py312", "py313", "py314"]
+target-version = ["py314"]
 exclude = '''
 /(
   build
@@ -157,7 +154,7 @@ known-first-party = ["api", "ingestion", "llm", "processing", "rag", "storage", 
 section-order = ["future", "standard-library", "third-party", "first-party", "local-folder"]
 
 [tool.mypy]
-python_version = "3.11"
+python_version = "3.14"
 strict = false
 ignore_missing_imports = true
 disallow_untyped_defs = false
