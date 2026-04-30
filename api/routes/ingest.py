@@ -6,7 +6,7 @@ Ingestion runs as a FastAPI background task to avoid blocking the request.
 import threading
 from datetime import datetime
 from pathlib import Path
-from typing import Annotated
+from typing import Annotated, Optional, Any, cast
 
 from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException
 from loguru import logger
@@ -27,7 +27,7 @@ def submit_ingest(
     request: IngestRequest,
     background_tasks: BackgroundTasks,
     db: DbSession,
-):
+) -> IngestResponse:
     """
     Submit a video source for ingestion.
     Returns a job_id immediately; poll GET /ingest/{job_id} for progress.
@@ -45,9 +45,9 @@ def submit_ingest(
     # Run ingestion in the background
     background_tasks.add_task(
         _run_ingest_pipeline,
-        job_id=job.id,
+        job_id=str(job.id),
         source=request.source,
-        source_type=job.source_type,
+        source_type=str(job.source_type),
         language=request.language,
         platform=request.platform,
         api_credentials=request.api_credentials,
@@ -56,14 +56,14 @@ def submit_ingest(
     logger.info(f"[Ingest] Job {job.id} queued for source: {request.source[:60]}")
 
     return IngestResponse(
-        job_id=job.id,
+        job_id=str(job.id),
         status="queued",
         message="Ingestion job submitted. Use GET /ingest/{job_id} to track progress.",
     )
 
 
 @router.get("/{job_id}", response_model=JobStatusResponse)
-def get_job_status(job_id: str, db: DbSession):
+def get_job_status(job_id: str, db: DbSession) -> JobStatusResponse:
     """Poll the status of an ingestion job."""
     job = db.query(IngestJob).filter(IngestJob.id == job_id).first()
     if not job:
@@ -72,7 +72,7 @@ def get_job_status(job_id: str, db: DbSession):
     job_data = job.to_dict()
     # Rename 'id' field to 'job_id' to match Pydantic model expectation
     job_data["job_id"] = job_data.pop("id")
-    return JobStatusResponse(**job_data)
+    return JobStatusResponse(**cast(dict[str, Any], job_data))
 
 
 # ── Background pipeline ──────────────────────────────────────────────────────
@@ -80,17 +80,17 @@ def get_job_status(job_id: str, db: DbSession):
 # Module-level singletons avoid reloading heavy ML models on every job.
 # In a multi-worker deployment each worker holds its own instance, but
 # within a worker the model is reused across all background tasks.
-_transcriber_singleton = None
+_transcriber_singleton: Optional[Any] = None
 _transcriber_lock = threading.Lock()
 
-_embedder_singleton = None
+_embedder_singleton: Optional[Any] = None
 _embedder_lock = threading.Lock()
 
-_vector_store_singleton = None
+_vector_store_singleton: Optional[Any] = None
 _vector_store_lock = threading.Lock()
 
 
-def _get_transcriber():
+def _get_transcriber() -> Any:
     global _transcriber_singleton
     if _transcriber_singleton is None:
         with _transcriber_lock:
@@ -101,7 +101,7 @@ def _get_transcriber():
     return _transcriber_singleton
 
 
-def _get_embedder():
+def _get_embedder() -> Any:
     global _embedder_singleton
     if _embedder_singleton is None:
         with _embedder_lock:
@@ -112,7 +112,7 @@ def _get_embedder():
     return _embedder_singleton
 
 
-def _get_vector_store():
+def _get_vector_store() -> Any:
     global _vector_store_singleton
     if _vector_store_singleton is None:
         with _vector_store_lock:
@@ -127,8 +127,8 @@ def _run_ingest_pipeline(
     job_id: str,
     source: str,
     source_type: str,
-    language: str = None,
-    platform: str = None,
+    language: Optional[str] = None,
+    platform: Optional[str] = None,
     api_credentials: dict[str, str] | None = None,
 ) -> None:
     """
@@ -144,7 +144,7 @@ def _run_ingest_pipeline(
 
     db = SessionLocal()
 
-    def update_job(status: str, message: str, video_id: str = None, error: str = None):
+    def update_job(status: str, message: str, video_id: Optional[str] = None, error: Optional[str] = None) -> None:
         try:
             job = db.query(IngestJob).filter(IngestJob.id == job_id).first()
             if job:
@@ -190,6 +190,8 @@ def _run_ingest_pipeline(
         except IntegrityError:
             db.rollback()
             video = db.query(Video).filter(Video.id == asset.video_id).first()
+            if video is None:
+                raise RuntimeError(f"Video {asset.video_id} not found after merge")
 
         # ── Step 3: Transcribe ────────────────────────────────────────────────
         transcriber = _get_transcriber()
@@ -220,7 +222,7 @@ def _run_ingest_pipeline(
 
         # ── Step 7: Update DB ─────────────────────────────────────────────────
         video = db.query(Video).filter(Video.id == asset.video_id).first()
-        if video:
+        if video is not None:
             video.status = "indexed"
             video.chunk_count = len(chunks)
             video.language = transcript.language
@@ -238,7 +240,7 @@ def _run_ingest_pipeline(
         try:
             if "asset" in locals() and hasattr(asset, "video_id"):
                 video = db.query(Video).filter(Video.id == asset.video_id).first()
-                if video:
+                if video is not None:
                     video.status = "error"
                     video.error_message = str(e)
                     db.commit()
@@ -258,7 +260,7 @@ def _detect_source_type(source: str) -> str:
     return "local_file"
 
 
-def _get_ingester(source_type: str, platform: str | None = None, credentials: dict[str, str] | None = None):
+def _get_ingester(source_type: str, platform: Optional[str] = None, credentials: Optional[dict[str, str]] = None) -> Any:
     from ingestion import LiveStreamIngester, LocalFileIngester, YouTubeIngester
     from ingestion.video_api import get_api_ingester
 

@@ -94,7 +94,7 @@ class YouTubeIngester(BaseIngester):
             if result.returncode != 0:
                 logger.warning(f"[YouTube] Metadata fetch warning: {result.stderr[:200]}")
                 return {}
-            return json.loads(result.stdout)
+            return cast(dict[str, Any], json.loads(result.stdout))
         except (subprocess.TimeoutExpired, json.JSONDecodeError, FileNotFoundError) as e:
             logger.warning(f"[YouTube] Metadata fetch failed: {e}")
             return {}
