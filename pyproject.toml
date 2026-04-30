@@ -85,10 +85,9 @@ dev = [
   "ruff>=0.7.0",
   "mypy>=1.13.0",
   "pre-commit>=3.7.0",
-  "pydantic-mypy>=0.7.0",
+  "pydantic[mypy]>=2.0",
   "sqlalchemy[mypy]>=2.0",
   "types-requests>=2.31.0",
-  "types-python-dotenv>=1.0.0",
   "types-tqdm>=4.66.0"
 ]
 
