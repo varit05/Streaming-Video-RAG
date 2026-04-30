@@ -3,29 +3,29 @@ Central configuration for the Streaming Video-RAG system.
 All settings are driven by environment variables (see .env.example).
 """
 
-from enum import Enum
+import enum
 from pathlib import Path
 
 from pydantic_settings import BaseSettings
 
 
-class LLMProvider(str, Enum):
+class LLMProvider(enum.strEnum):
     OPENAI = "openai"
     ANTHROPIC = "anthropic"
     OLLAMA = "ollama"
 
 
-class WhisperMode(str, Enum):
+class WhisperMode(enum.strEnum):
     LOCAL = "local"
     OPENAI_API = "openai_api"
 
 
-class EmbeddingMode(str, Enum):
+class EmbeddingMode(enum.strEnum):
     LOCAL = "local"
     OPENAI = "openai"
 
 
-class VectorStoreType(str, Enum):
+class VectorStoreType(enum.strEnum):
     CHROMA = "chroma"
     QDRANT = "qdrant"
 

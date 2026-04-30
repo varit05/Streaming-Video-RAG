@@ -6,7 +6,8 @@ Two modes controlled by EMBEDDING_MODE env var:
   - OPENAI: OpenAI text-embedding API (better quality, costs money)
 """
 
-from typing import Any, Optional, Protocol
+from typing import Any, Protocol
+
 from loguru import logger
 from tenacity import retry, stop_after_attempt, wait_exponential
 
@@ -38,8 +39,8 @@ class Embedder:
 
     def __init__(self):
         self.mode = settings.embedding_mode
-        self._local_model: Optional[SentenceTransformerProtocol] = None
-        self._openai_client: Optional[OpenAIClientProtocol] = None
+        self._local_model: SentenceTransformerProtocol | None = None
+        self._openai_client: OpenAIClientProtocol | None = None
 
     @property
     def dimension(self) -> int:
@@ -105,8 +106,9 @@ class Embedder:
         if self._openai_client is None:
             if not settings.openai_api_key:
                 raise RuntimeError("OPENAI_API_KEY is not set. Required when EMBEDDING_MODE=openai.")
-            from openai import OpenAI
             from typing import cast
+
+            from openai import OpenAI
 
             self._openai_client = cast(OpenAIClientProtocol, OpenAI(
                 api_key=settings.openai_api_key,

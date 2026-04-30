@@ -7,7 +7,7 @@ Twitter/X videos, direct video URLs, etc.
 import json
 import subprocess
 from pathlib import Path
-from typing import Optional, Any, cast
+from typing import Any, cast
 
 from loguru import logger
 
@@ -36,7 +36,7 @@ class YouTubeIngester(BaseIngester):
         """Accept any http(s) URL — yt-dlp handles validation at runtime."""
         return source.startswith("http://") or source.startswith("https://")
 
-    def ingest(self, source: str, video_id: Optional[str] = None) -> VideoAsset:
+    def ingest(self, source: str, video_id: str | None = None) -> VideoAsset:
         if video_id is None:
             video_id = VideoAsset.generate_id()
 

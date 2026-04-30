@@ -2,7 +2,6 @@
 
 from abc import ABC, abstractmethod
 from dataclasses import dataclass
-from typing import Optional
 
 from processing.chunker import VideoChunk
 
@@ -42,7 +41,7 @@ class BaseVectorStore(ABC):
         self,
         query_vector: list[float],
         top_k: int = 5,
-        filter_video_id: Optional[str] = None,
+        filter_video_id: str | None = None,
     ) -> list[SearchResult]:
         """Return top_k most similar chunks, optionally filtered by video_id."""
         ...
@@ -53,6 +52,6 @@ class BaseVectorStore(ABC):
         ...
 
     @abstractmethod
-    def count(self, video_id: Optional[str] = None) -> int:
+    def count(self, video_id: str | None = None) -> int:
         """Count indexed chunks, optionally scoped to a video."""
         ...

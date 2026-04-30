@@ -5,7 +5,7 @@ and extracts 16kHz mono WAV audio for transcription.
 """
 
 from pathlib import Path
-from typing import Optional, Any
+from typing import Any
 
 import ffmpeg
 from loguru import logger
@@ -53,7 +53,7 @@ class LocalFileIngester(BaseIngester):
         path = self._resolve_source_path(source)
         return path.exists() and path.suffix.lower() in SUPPORTED_EXTENSIONS
 
-    def ingest(self, source: str, video_id: Optional[str] = None) -> VideoAsset:
+    def ingest(self, source: str, video_id: str | None = None) -> VideoAsset:
         print("Source ", source)
         source_path = self._resolve_source_path(source)
         if not source_path.exists():

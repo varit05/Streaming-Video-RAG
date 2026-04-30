@@ -4,12 +4,12 @@ Tracks video metadata and ingestion job state.
 """
 
 import uuid
+from collections.abc import Generator
 from datetime import datetime
-from typing import Generator, Literal
 
 from sqlalchemy import DateTime, Float, Integer, String, Text, create_engine
 from sqlalchemy import Enum as SAEnum
-from sqlalchemy.orm import DeclarativeBase, Session, Mapped, mapped_column, sessionmaker
+from sqlalchemy.orm import DeclarativeBase, Mapped, Session, mapped_column, sessionmaker
 
 from config import settings
 
@@ -112,7 +112,7 @@ def init_db() -> None:
     Base.metadata.create_all(bind=engine)
 
 
-def get_db() -> Generator[Session, None, None]:
+def get_db() -> Generator[Session]:
     """FastAPI dependency: yield a DB session and close it after the request."""
     db = SessionLocal()
     try:

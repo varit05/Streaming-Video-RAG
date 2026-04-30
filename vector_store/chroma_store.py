@@ -3,11 +3,12 @@ Chroma vector store — recommended for local development.
 No server needed; persists to disk automatically.
 """
 
-from typing import Optional, Any, Sequence, cast
-from chromadb.types import Where
+from collections.abc import Sequence
+from typing import Any, cast
 
 import chromadb
 from chromadb.config import Settings as ChromaSettings
+from chromadb.types import Where
 from loguru import logger
 
 from config import settings
@@ -51,7 +52,7 @@ class ChromaVectorStore(BaseVectorStore):
         self,
         query_vector: list[float],
         top_k: int = 5,
-        filter_video_id: Optional[str] = None,
+        filter_video_id: str | None = None,
     ) -> list[SearchResult]:
         where = cast(Where | None, {"video_id": filter_video_id} if filter_video_id else None)
 
@@ -100,7 +101,7 @@ class ChromaVectorStore(BaseVectorStore):
         logger.info(f"[Chroma] Deleted {len(ids_to_delete)} chunks for video {video_id}")
         return len(ids_to_delete)
 
-    def count(self, video_id: Optional[str] = None) -> int:
+    def count(self, video_id: str | None = None) -> int:
         if video_id:
             result = self._collection.get(where={"video_id": video_id})
             return len(result["ids"])

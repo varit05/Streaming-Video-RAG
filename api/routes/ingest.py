@@ -6,7 +6,7 @@ Ingestion runs as a FastAPI background task to avoid blocking the request.
 import threading
 from datetime import datetime
 from pathlib import Path
-from typing import Annotated, Optional, Any, cast
+from typing import Annotated, Any, cast
 
 from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException
 from loguru import logger
@@ -80,13 +80,13 @@ def get_job_status(job_id: str, db: DbSession) -> JobStatusResponse:
 # Module-level singletons avoid reloading heavy ML models on every job.
 # In a multi-worker deployment each worker holds its own instance, but
 # within a worker the model is reused across all background tasks.
-_transcriber_singleton: Optional[Any] = None
+_transcriber_singleton: Any | None = None
 _transcriber_lock = threading.Lock()
 
-_embedder_singleton: Optional[Any] = None
+_embedder_singleton: Any | None = None
 _embedder_lock = threading.Lock()
 
-_vector_store_singleton: Optional[Any] = None
+_vector_store_singleton: Any | None = None
 _vector_store_lock = threading.Lock()
 
 
@@ -127,8 +127,8 @@ def _run_ingest_pipeline(
     job_id: str,
     source: str,
     source_type: str,
-    language: Optional[str] = None,
-    platform: Optional[str] = None,
+    language: str | None = None,
+    platform: str | None = None,
     api_credentials: dict[str, str] | None = None,
 ) -> None:
     """
@@ -144,7 +144,7 @@ def _run_ingest_pipeline(
 
     db = SessionLocal()
 
-    def update_job(status: str, message: str, video_id: Optional[str] = None, error: Optional[str] = None) -> None:
+    def update_job(status: str, message: str, video_id: str | None = None, error: str | None = None) -> None:
         try:
             job = db.query(IngestJob).filter(IngestJob.id == job_id).first()
             if job:
@@ -261,7 +261,7 @@ def _detect_source_type(source: str) -> str:
 
 
 def _get_ingester(
-    source_type: str, platform: Optional[str] = None, credentials: Optional[dict[str, str]] = None
+    source_type: str, platform: str | None = None, credentials: dict[str, str] | None = None
 ) -> Any:
     from ingestion import LiveStreamIngester, LocalFileIngester, YouTubeIngester
     from ingestion.video_api import get_api_ingester

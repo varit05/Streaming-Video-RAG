@@ -3,7 +3,7 @@ Qdrant vector store — recommended for production.
 Requires a running Qdrant server (see docker-compose.yml).
 """
 
-from typing import Optional, Any, cast, Mapping
+from typing import Any, cast
 
 from loguru import logger
 from qdrant_client import QdrantClient
@@ -73,7 +73,7 @@ class QdrantVectorStore(BaseVectorStore):
         self,
         query_vector: list[float],
         top_k: int = 5,
-        filter_video_id: Optional[str] = None,
+        filter_video_id: str | None = None,
     ) -> list[SearchResult]:
         try:
             query_filter = None
@@ -109,15 +109,15 @@ class QdrantVectorStore(BaseVectorStore):
                     results.append(SearchResult(chunk=chunk, score=float(hit.score)))
                 except Exception as hit_error:
                     logger.warning(f"[Qdrant] Failed to parse hit id={hit.id}: {hit_error}")
-                    continue
-
-            logger.debug(f"[Qdrant] Search completed successfully, found {len(results)} valid results")
-            return results
+                    continue            
 
         except Exception as e:
-            logger.error(f"[Qdrant] Search failed: {str(e)}")
+            logger.error(f"[Qdrant] Search failed: {e!s}")
             logger.error(f"[Qdrant] Collection: {self._collection}, top_k: {top_k}, filter: {filter_video_id}")
             raise
+        else:
+            logger.debug(f"[Qdrant] Search completed successfully, found {len(results)} valid results")
+            return results
 
     def delete_video(self, video_id: str) -> int:
         # Count before delete
@@ -129,7 +129,7 @@ class QdrantVectorStore(BaseVectorStore):
         logger.info(f"[Qdrant] Deleted ~{count_before} chunks for video {video_id}")
         return count_before
 
-    def count(self, video_id: Optional[str] = None) -> int:
+    def count(self, video_id: str | None = None) -> int:
         if video_id:
             result = self._client.count(
                 collection_name=self._collection,

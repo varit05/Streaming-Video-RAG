@@ -5,8 +5,8 @@ so each segment can be processed through the pipeline independently.
 This enables near-real-time indexing of live content.
 """
 
+from collections.abc import Callable, Generator
 from pathlib import Path
-from typing import Callable, Generator, Optional
 
 import ffmpeg
 from loguru import logger
@@ -34,11 +34,11 @@ class LiveStreamIngester(BaseIngester):
             source.startswith("rtmp://")
             or source.startswith("rtmps://")
             or ".m3u8" in source
-            or source.startswith("http")
-            and "stream" in source.lower()
+            or (source.startswith("http")
+            and "stream" in source.lower())
         )
 
-    def ingest(self, source: str, video_id: Optional[str] = None) -> VideoAsset:
+    def ingest(self, source: str, video_id: str | None = None) -> VideoAsset:
         """
         Capture a single fixed-length segment from the stream.
         For continuous ingestion, use ingest_stream() instead.
@@ -66,9 +66,9 @@ class LiveStreamIngester(BaseIngester):
     def ingest_stream(
         self,
         source: str,
-        max_segments: Optional[int] = None,
-        on_segment: Optional[Callable[[VideoAsset], None]] = None,
-    ) -> Generator[VideoAsset, None, None]:
+        max_segments: int | None = None,
+        on_segment: Callable[[VideoAsset], None] | None = None,
+    ) -> Generator[VideoAsset]:
         """
         Continuously capture segments from a live stream.
 

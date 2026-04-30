@@ -110,7 +110,7 @@ def api_post(path: str, json: dict[str, object | None] | dict[str, str]):
         return None
 
 
-def poll_job(job_id: str, placeholder: "st.delta_generator.DeltaGenerator") -> dict[str, object]:
+def poll_job(job_id: str, placeholder: st.delta_generator.DeltaGenerator) -> dict[str, object]:
     """Poll ingestion job until done or error."""
     for _ in range(300):  # max ~5 minutes
         data = api_get(f"/ingest/{job_id}")
@@ -266,7 +266,7 @@ with tab_qa:
 <div class="result-card">
 <span class="citation-badge">[{s["index"]}]</span>&nbsp;
 <strong>{s["title"][:60]}</strong>&nbsp;
-<span class="timestamp-badge">⏱ {s["start_ts"]} – {s["end_ts"]}</span>&nbsp;
+<span class="timestamp-badge">⏱ {s["start_ts"]} - {s["end_ts"]}</span>&nbsp;
 <span class="score-badge">score: {s["score"]}</span><br>
 <small><a href="{deep_link}" target="_blank">🔗 Open at timestamp</a></small>
 </div>
@@ -310,7 +310,7 @@ with tab_search:
             for r in resp["results"]:
                 deep_link = r.get("deep_link") or r.get("source_url", "#")
                 with st.expander(
-                    f"#{r['rank']}  {r['title'][:50]}  ·  {r['start_ts']}–{r['end_ts']}  ·  score: {r['score']}",
+                    f"#{r['rank']}  {r['title'][:50]}  ·  {r['start_ts']} - {r['end_ts']}  ·  score: {r['score']}",
                     expanded=r["rank"] <= 3,
                 ):
                     if r.get("chapter"):

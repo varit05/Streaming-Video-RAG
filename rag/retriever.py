@@ -3,7 +3,6 @@ Retriever — wraps the vector store + embedder into a clean retrieval interface
 Used by QAChain, Summarizer, and SearchEngine.
 """
 
-from typing import Optional
 
 from loguru import logger
 
@@ -35,8 +34,8 @@ class Retriever:
     def retrieve(
         self,
         query: str,
-        top_k: Optional[int] = None,
-        video_id: Optional[str] = None,
+        top_k: int | None = None,
+        video_id: str | None = None,
     ) -> list[SearchResult]:
         """
         Find the most relevant chunks for `query`.
@@ -59,12 +58,12 @@ class Retriever:
             import traceback
 
             error_stack = traceback.format_exc()
-            logger.error(f"[Retriever] Retrieval failed with error: {str(e)}")
+            logger.error(f"[Retriever] Retrieval failed with error: {e!s}")
             logger.error(f"[Retriever] Full error stack:\n{error_stack}")
 
             # Preserve original exception context
             raise RuntimeError(
-                f"Vector store retrieval failed. Error: {str(e)}. "
+                f"Vector store retrieval failed. Error: {e!s}. "
                 f"Type: {type(e).__name__}. Check logs for full stack trace."
             ) from e
 
@@ -84,5 +83,5 @@ class Retriever:
         """
         parts = []
         for i, r in enumerate(results, 1):
-            parts.append(f'[{i}] "{r.chunk.title}" @ {r.chunk.start_ts}–{r.chunk.end_ts}\n{r.chunk.text}')
+            parts.append(f'[{i}] "{r.chunk.title}" @ {r.chunk.start_ts}-{r.chunk.end_ts}\n{r.chunk.text}')
         return "\n\n---\n\n".join(parts)

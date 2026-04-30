@@ -20,7 +20,7 @@ Summarize the key points from this video transcript excerpt in 2-4 sentences.
 Focus on the main ideas and any specific facts, names, or data mentioned.
 Do not include timestamps.
 
-Transcript excerpt ({start_ts}–{end_ts}):
+Transcript excerpt ({start_ts}-{end_ts}):
 {text}
 """
 

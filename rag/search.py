@@ -4,7 +4,6 @@ Returns ranked chunks with timestamps, ready for display.
 """
 
 from dataclasses import dataclass
-from typing import Optional
 
 from loguru import logger
 
@@ -35,7 +34,7 @@ class SearchEngine:
         self,
         query: str,
         top_k: int = 10,
-        video_id: Optional[str] = None,
+        video_id: str | None = None,
         min_score: float = 0.0,
     ) -> SearchResponse:
         """

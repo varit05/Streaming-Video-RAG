@@ -6,15 +6,14 @@ Every ingester must produce a VideoAsset containing at minimum:
   - basic metadata (title, duration, source_url, source_type)
 """
 
+import enum
 import uuid
 from abc import ABC, abstractmethod
 from dataclasses import dataclass, field
-from enum import Enum
 from pathlib import Path
-from typing import Optional
 
 
-class SourceType(str, Enum):
+class SourceType(enum.StrEnum):
     YOUTUBE = "youtube"
     LOCAL_FILE = "local_file"
     LIVE_STREAM = "live_stream"
@@ -30,12 +29,12 @@ class VideoAsset:
     source_url: str
     source_type: SourceType
     local_audio_path: Path  # Path to extracted 16kHz mono WAV
-    duration_seconds: Optional[float] = None
-    description: Optional[str] = None
+    duration_seconds: float | None = None
+    description: str | None = None
     chapters: list[dict[str, str | float]] = field(default_factory=list)  # [{title, start, end}]
-    thumbnail_url: Optional[str] = None
-    uploader: Optional[str] = None
-    upload_date: Optional[str] = None
+    thumbnail_url: str | None = None
+    uploader: str | None = None
+    upload_date: str | None = None
     extra_metadata: dict[str, object] = field(default_factory=dict)
 
     @classmethod
@@ -61,7 +60,7 @@ class BaseIngester(ABC):
         ...
 
     @abstractmethod
-    def ingest(self, source: str, video_id: Optional[str] = None) -> VideoAsset:
+    def ingest(self, source: str, video_id: str | None = None) -> VideoAsset:
         """
         Download or capture the source, extract audio to a WAV file,
         and return a populated VideoAsset.

@@ -10,7 +10,7 @@ Local model size controlled by WHISPER_MODEL_SIZE (default: base).
 import json
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Optional, Any
+from typing import Any
 
 from loguru import logger
 from tenacity import retry, stop_after_attempt, wait_exponential
@@ -73,7 +73,7 @@ class Transcript:
         logger.debug(f"Transcript saved → {path}")
 
     @classmethod
-    def load(cls, path: Path) -> "Transcript":
+    def load(cls, path: Path) -> Transcript:
         data = json.loads(path.read_text())
         segments = [TranscriptSegment(s["start"], s["end"], s["text"]) for s in data["segments"]]
         return cls(
@@ -95,9 +95,9 @@ class WhisperTranscriber:
 
     def __init__(self):
         self.mode = settings.whisper_mode
-        self._local_model: Optional[Any] = None  # lazy-loaded
+        self._local_model: Any | None = None  # lazy-loaded
 
-    def transcribe(self, audio_path: Path, video_id: str, language: Optional[str] = None) -> Transcript:
+    def transcribe(self, audio_path: Path, video_id: str, language: str | None = None) -> Transcript:
         """
         Transcribe the audio file at `audio_path`.
 
@@ -121,7 +121,7 @@ class WhisperTranscriber:
 
     # ── Local Whisper ────────────────────────────────────────────────────────
 
-    def _transcribe_local(self, audio_path: Path, video_id: str, language: Optional[str]) -> Transcript:
+    def _transcribe_local(self, audio_path: Path, video_id: str, language: str | None) -> Transcript:
         """Run openai-whisper locally."""
         model = self._get_local_model()
 
@@ -158,7 +158,7 @@ class WhisperTranscriber:
     # ── OpenAI API Whisper ───────────────────────────────────────────────────
 
     @retry(stop=stop_after_attempt(3), wait=wait_exponential(min=2, max=10))
-    def _transcribe_api(self, audio_path: Path, video_id: str, language: Optional[str]) -> Transcript:
+    def _transcribe_api(self, audio_path: Path, video_id: str, language: str | None) -> Transcript:
         """Call the OpenAI Whisper API."""
         from openai import OpenAI
 

@@ -2,7 +2,7 @@
 /videos routes — list and manage indexed videos.
 """
 
-from typing import Annotated, Optional
+from typing import Annotated
 
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
@@ -19,7 +19,7 @@ DbSession = Annotated[Session, Depends(get_db)]
 @router.get("", response_model=VideoListResponse)
 def list_videos(
     db: DbSession,
-    status: Optional[str] = None,
+    status: str | None = None,
     limit: int = 50,
     offset: int = 0,
 ) -> VideoListResponse:

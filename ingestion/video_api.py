@@ -8,7 +8,7 @@ Each platform is a subclass of VideoAPIIngester. The factory function
 
 import subprocess
 from pathlib import Path
-from typing import Optional, Any
+from typing import Any
 
 import requests
 from loguru import logger
@@ -37,7 +37,7 @@ class VideoAPIIngester(BaseIngester):
     def validate(self, source: str) -> bool:
         raise NotImplementedError
 
-    def ingest(self, source: str, video_id: Optional[str] = None) -> VideoAsset:
+    def ingest(self, source: str, video_id: str | None = None) -> VideoAsset:
         raise NotImplementedError
 
 
@@ -64,7 +64,7 @@ class VimeoIngester(VideoAPIIngester):
     def validate(self, source: str) -> bool:
         return "vimeo.com" in source
 
-    def ingest(self, source: str, video_id: Optional[str] = None) -> VideoAsset:
+    def ingest(self, source: str, video_id: str | None = None) -> VideoAsset:
         vimeo_id = self._extract_vimeo_id(source)
         if video_id is None:
             video_id = VideoAsset.generate_id()
@@ -164,7 +164,7 @@ class TwitchIngester(VideoAPIIngester):
     def validate(self, source: str) -> bool:
         return "twitch.tv" in source
 
-    def ingest(self, source: str, video_id: Optional[str] = None) -> VideoAsset:
+    def ingest(self, source: str, video_id: str | None = None) -> VideoAsset:
         twitch_id = self._extract_twitch_vod_id(source)
         if video_id is None:
             video_id = VideoAsset.generate_id()
@@ -207,7 +207,7 @@ class TwitchIngester(VideoAPIIngester):
             logger.warning(f"[Twitch] Metadata fetch failed: {e}")
             return {}
 
-    def _parse_duration(self, duration_str: str) -> Optional[float]:
+    def _parse_duration(self, duration_str: str) -> float | None:
         """Parse Twitch duration format '1h2m3s' into seconds."""
         if not duration_str:
             return None

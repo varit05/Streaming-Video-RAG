@@ -20,4 +20,4 @@ def get_vector_store() -> BaseVectorStore:
     return _vector_store_instance
 
 
-__all__ = ["BaseVectorStore", "SearchResult", "ChromaVectorStore", "QdrantVectorStore", "get_vector_store"]
+__all__ = ["BaseVectorStore", "ChromaVectorStore", "QdrantVectorStore", "SearchResult", "get_vector_store"]
