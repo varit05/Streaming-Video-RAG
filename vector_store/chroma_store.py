@@ -3,10 +3,12 @@ Chroma vector store — recommended for local development.
 No server needed; persists to disk automatically.
 """
 
-from typing import Optional
+from collections.abc import Sequence
+from typing import Any, cast
 
 import chromadb
 from chromadb.config import Settings as ChromaSettings
+from chromadb.types import Where
 from loguru import logger
 
 from config import settings
@@ -39,10 +41,10 @@ class ChromaVectorStore(BaseVectorStore):
 
         # Chroma upserts by ID, so re-indexing a video is safe
         self._collection.upsert(
-            ids=ids,
-            embeddings=embeddings,
-            documents=documents,
-            metadatas=metadatas,
+            ids=cast(Sequence[str | None], ids),
+            embeddings=cast(Sequence[Sequence[float | int] | None], embeddings),
+            documents=cast(Sequence[str | None], documents),
+            metadatas=cast(Sequence[dict[str, Any] | None], metadatas),
         )
         logger.info(f"[Chroma] Upserted {len(chunks)} chunks")
 
@@ -50,22 +52,22 @@ class ChromaVectorStore(BaseVectorStore):
         self,
         query_vector: list[float],
         top_k: int = 5,
-        filter_video_id: Optional[str] = None,
+        filter_video_id: str | None = None,
     ) -> list[SearchResult]:
-        where = {"video_id": filter_video_id} if filter_video_id else None
+        where = cast(Where | None, {"video_id": filter_video_id} if filter_video_id else None)
 
         results = self._collection.query(
-            query_embeddings=[query_vector],
+            query_embeddings=cast(Sequence[Sequence[float | int] | None], [query_vector]),
             n_results=min(top_k, self._collection.count() or 1),
             where=where,
             include=["documents", "metadatas", "distances"],
         )
 
         search_results = []
-        ids = results["ids"][0]
-        docs = results["documents"][0]
-        metas = results["metadatas"][0]
-        distances = results["distances"][0]
+        ids = results["ids"][0] if results["ids"] else []
+        docs = results["documents"][0] if results["documents"] else []
+        metas = results["metadatas"][0] if results["metadatas"] else []
+        distances = results["distances"][0] if results["distances"] else []
 
         for i, (doc_id, text, meta, dist) in enumerate(zip(ids, docs, metas, distances, strict=False)):
             if not meta or "video_id" not in meta:
@@ -76,16 +78,16 @@ class ChromaVectorStore(BaseVectorStore):
             score = max(0.0, 1.0 - dist / 2.0)
 
             chunk = VideoChunk(
-                chunk_id=meta.get("chunk_id", doc_id),
-                video_id=meta["video_id"],
+                chunk_id=str(meta.get("chunk_id", doc_id)),
+                video_id=str(meta["video_id"]),
                 text=text,
-                start_time=float(meta.get("start_time", 0)),
-                end_time=float(meta.get("end_time", 0)),
-                segment_index=int(meta.get("segment_index", i)),
-                title=meta.get("title", ""),
-                source_url=meta.get("source_url", ""),
-                chapter=meta.get("chapter") or None,
-                language=meta.get("language", "en"),
+                start_time=float(cast(float, meta.get("start_time", 0.0))),
+                end_time=float(cast(float, meta.get("end_time", 0.0))),
+                segment_index=int(cast(int, meta.get("segment_index", i))),
+                title=str(meta.get("title", "")),
+                source_url=str(meta.get("source_url", "")),
+                chapter=str(meta.get("chapter")) if meta.get("chapter") else None,
+                language=str(meta.get("language", "en")),
             )
             search_results.append(SearchResult(chunk=chunk, score=score))
 
@@ -99,7 +101,7 @@ class ChromaVectorStore(BaseVectorStore):
         logger.info(f"[Chroma] Deleted {len(ids_to_delete)} chunks for video {video_id}")
         return len(ids_to_delete)
 
-    def count(self, video_id: Optional[str] = None) -> int:
+    def count(self, video_id: str | None = None) -> int:
         if video_id:
             result = self._collection.get(where={"video_id": video_id})
             return len(result["ids"])

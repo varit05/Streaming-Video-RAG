@@ -6,12 +6,26 @@ Two modes controlled by EMBEDDING_MODE env var:
   - OPENAI: OpenAI text-embedding API (better quality, costs money)
 """
 
+from typing import Any, Protocol
+
 from loguru import logger
 from tenacity import retry, stop_after_attempt, wait_exponential
 
 from config import EmbeddingMode, settings
 
 from .chunker import VideoChunk
+
+
+class SentenceTransformerProtocol(Protocol):
+    def encode(self, texts: list[str], **kwargs: Any) -> Any: ...
+
+
+class OpenAIEmbeddingsProtocol(Protocol):
+    def create(self, **kwargs: Any) -> Any: ...
+
+
+class OpenAIClientProtocol(Protocol):
+    embeddings: OpenAIEmbeddingsProtocol
 
 
 class Embedder:
@@ -23,8 +37,8 @@ class Embedder:
 
     def __init__(self):
         self.mode = settings.embedding_mode
-        self._local_model = None
-        self._openai_client = None
+        self._local_model: SentenceTransformerProtocol | None = None
+        self._openai_client: OpenAIClientProtocol | None = None
 
     @property
     def dimension(self) -> int:
@@ -32,7 +46,7 @@ class Embedder:
         if self.mode == EmbeddingMode.LOCAL:
             return 384  # all-MiniLM-L6-v2
         else:
-            # text-embedding-3-small = 1536, text-embedding-3-large = 3072
+
             if "large" in settings.openai_embedding_model:
                 return 3072
             return 1536
@@ -77,7 +91,7 @@ class Embedder:
         )
         return embeddings.tolist()
 
-    def _get_local_model(self):
+    def _get_local_model(self) -> SentenceTransformerProtocol:
         if self._local_model is None:
             from sentence_transformers import SentenceTransformer
 
@@ -86,16 +100,21 @@ class Embedder:
             self._local_model = SentenceTransformer(model_name)
         return self._local_model
 
-    def _get_openai_client(self):
+    def _get_openai_client(self) -> OpenAIClientProtocol:
         if self._openai_client is None:
             if not settings.openai_api_key:
                 raise RuntimeError("OPENAI_API_KEY is not set. Required when EMBEDDING_MODE=openai.")
+            from typing import cast
+
             from openai import OpenAI
 
-            self._openai_client = OpenAI(
-                api_key=settings.openai_api_key,
-                timeout=60.0,
-                max_retries=2,
+            self._openai_client = cast(
+                OpenAIClientProtocol,
+                OpenAI(
+                    api_key=settings.openai_api_key,
+                    timeout=60.0,
+                    max_retries=2,
+                ),
             )
         return self._openai_client
 

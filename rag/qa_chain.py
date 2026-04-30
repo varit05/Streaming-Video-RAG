@@ -4,7 +4,7 @@ Returns the answer text plus citations (video title + timestamp for each source)
 """
 
 from dataclasses import dataclass
-from typing import Optional
+from typing import cast
 
 from langchain_core.messages import HumanMessage, SystemMessage
 from loguru import logger
@@ -46,7 +46,7 @@ class QAResult:
     question: str
     answer: str
     sources: list[SearchResult]
-    video_id: Optional[str] = None
+    video_id: str | None = None
 
     @property
     def source_citations(self) -> list[dict[str, object]]:
@@ -77,8 +77,8 @@ class QAChain:
     def ask(
         self,
         question: str,
-        video_id: Optional[str] = None,
-        top_k: Optional[int] = None,
+        video_id: str | None = None,
+        top_k: int | None = None,
     ) -> QAResult:
         """
         Answer a question using retrieved video transcript context.
@@ -113,6 +113,7 @@ class QAChain:
         messages = [SystemMessage(content=SYSTEM_PROMPT), HumanMessage(content=user_message)]
         response = llm.invoke(messages)
         answer = response.content if hasattr(response, "content") else str(response)
+        answer = cast(str, answer)
 
         logger.success(f"[QA] Answer generated ({len(answer)} chars)")
 

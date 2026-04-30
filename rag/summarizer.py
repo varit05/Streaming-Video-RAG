@@ -5,6 +5,7 @@ and then combining them into a final summary.
 """
 
 from dataclasses import dataclass
+from typing import cast
 
 from langchain_core.messages import HumanMessage, SystemMessage
 from loguru import logger
@@ -19,7 +20,7 @@ Summarize the key points from this video transcript excerpt in 2-4 sentences.
 Focus on the main ideas and any specific facts, names, or data mentioned.
 Do not include timestamps.
 
-Transcript excerpt ({start_ts}–{end_ts}):
+Transcript excerpt ({start_ts}-{end_ts}):
 {text}
 """
 
@@ -140,7 +141,8 @@ class Summarizer:
                 text=r.chunk.text,
             )
             response = llm.invoke([SystemMessage(content=MAP_SYSTEM), HumanMessage(content=prompt)])
-            summaries.append(response.content.strip())
+            content = cast(str, response.content)
+            summaries.append(content.strip())
 
         return summaries
 
@@ -150,11 +152,12 @@ class Summarizer:
         combined = "\n\n".join(f"[Section {i + 1}] {s}" for i, s in enumerate(summaries))
         prompt = REDUCE_TEMPLATE.format(title=title, summaries=combined)
         response = llm.invoke([SystemMessage(content=REDUCE_SYSTEM), HumanMessage(content=prompt)])
-        return response.content.strip()
+        content = cast(str, response.content)
+        return content.strip()
 
     def _group_by_chapter(self, results: list[SearchResult]) -> dict[str, list[SearchResult]]:
         """Group chunks by their chapter label."""
-        grouped = {}
+        grouped: dict[str, list[SearchResult]] = {}
         for r in results:
             key = r.chunk.chapter or "Main Content"
             grouped.setdefault(key, []).append(r)
@@ -169,14 +172,13 @@ class Summarizer:
         prompt = CHAPTER_TEMPLATE.format(chapter_content=chapter_content)
         response = llm.invoke([SystemMessage(content=MAP_SYSTEM), HumanMessage(content=prompt)])
 
-        result = []
-        for ch in chapters:
-            result.append({"chapter": ch, "summary": ""})
+        result = [{"chapter": ch, "summary": ""} for ch in chapters]
 
         # Parse the response text to extract per-chapter summaries
-        lines = response.content.strip().split("\n")
+        content = cast(str, response.content)
+        lines = content.strip().split("\n")
         current_chapter_idx = 0
-        buffer = []
+        buffer: list[str] = []
         for line in lines:
             matched = False
             for i, ch in enumerate(chapters.keys()):

@@ -3,7 +3,7 @@ Qdrant vector store — recommended for production.
 Requires a running Qdrant server (see docker-compose.yml).
 """
 
-from typing import Optional
+from typing import Any, cast
 
 from loguru import logger
 from qdrant_client import QdrantClient
@@ -24,8 +24,8 @@ from .base import BaseVectorStore, SearchResult
 
 
 class QdrantVectorStore(BaseVectorStore):
-    def __init__(self):
-        client_kwargs = {
+    def __init__(self) -> None:
+        client_kwargs: dict[str, Any] = {
             "url": settings.qdrant_url,
             "timeout": 30,
         }
@@ -36,10 +36,10 @@ class QdrantVectorStore(BaseVectorStore):
         if settings.qdrant_https:
             client_kwargs["https"] = True
 
-        self._client = QdrantClient(**client_kwargs)
+        self._client = cast(Any, QdrantClient(**client_kwargs))
         self._collection = settings.qdrant_collection
         # Infer dimension from embedder
-        self._dim = Embedder().dimension
+        self._dim = cast(Any, Embedder()).dimension
         self._ensure_collection()
         logger.info(f"[Qdrant] Connected — collection '{self._collection}', dim={self._dim}")
 
@@ -73,7 +73,7 @@ class QdrantVectorStore(BaseVectorStore):
         self,
         query_vector: list[float],
         top_k: int = 5,
-        filter_video_id: Optional[str] = None,
+        filter_video_id: str | None = None,
     ) -> list[SearchResult]:
         try:
             query_filter = None
@@ -111,13 +111,13 @@ class QdrantVectorStore(BaseVectorStore):
                     logger.warning(f"[Qdrant] Failed to parse hit id={hit.id}: {hit_error}")
                     continue
 
-            logger.debug(f"[Qdrant] Search completed successfully, found {len(results)} valid results")
-            return results
-
         except Exception as e:
-            logger.error(f"[Qdrant] Search failed: {str(e)}")
+            logger.error(f"[Qdrant] Search failed: {e!s}")
             logger.error(f"[Qdrant] Collection: {self._collection}, top_k: {top_k}, filter: {filter_video_id}")
             raise
+        else:
+            logger.debug(f"[Qdrant] Search completed successfully, found {len(results)} valid results")
+            return results
 
     def delete_video(self, video_id: str) -> int:
         # Count before delete
@@ -129,15 +129,15 @@ class QdrantVectorStore(BaseVectorStore):
         logger.info(f"[Qdrant] Deleted ~{count_before} chunks for video {video_id}")
         return count_before
 
-    def count(self, video_id: Optional[str] = None) -> int:
+    def count(self, video_id: str | None = None) -> int:
         if video_id:
             result = self._client.count(
                 collection_name=self._collection,
                 count_filter=Filter(must=[FieldCondition(key="video_id", match=MatchValue(value=video_id))]),
                 exact=True,
             )
-            return result.count
-        return self._client.count(collection_name=self._collection, exact=True).count
+            return cast(int, result.count)
+        return cast(int, self._client.count(collection_name=self._collection, exact=True).count)
 
     @staticmethod
     def _chunk_id_to_int(chunk_id: str) -> int:

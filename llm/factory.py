@@ -13,14 +13,17 @@ Usage:
 """
 
 from functools import lru_cache
+from typing import Any
 
+from langchain_core.language_models import BaseChatModel
 from loguru import logger
+from pydantic import SecretStr
 
 from config import LLMProvider, settings
 
 
 @lru_cache(maxsize=1)
-def get_llm(temperature: float = 0.0):
+def get_llm(temperature: float = 0.0) -> BaseChatModel:
     """
     Return a LangChain BaseChatModel for the configured provider.
     Cached so the model is only instantiated once per process.
@@ -56,22 +59,22 @@ def get_llm_provider_name() -> str:
 # ── Provider implementations ─────────────────────────────────────────────────
 
 
-def _openai_llm(temperature: float):
+def _openai_llm(temperature: float) -> BaseChatModel:
     from langchain_openai import ChatOpenAI
 
     return ChatOpenAI(
         model=settings.llm_model,
         temperature=temperature,
-        api_key=settings.openai_api_key,
+        api_key=SecretStr(settings.openai_api_key) if settings.openai_api_key else None,
         streaming=True,
     )
 
 
-def _anthropic_llm(temperature: float):
+def _anthropic_llm(temperature: float) -> BaseChatModel:
     from langchain_anthropic import ChatAnthropic
 
     # Opus 4.7+ removes temperature/top_p/top_k at the API level (returns 400 if sent).
-    kwargs: dict = {
+    kwargs: dict[str, Any] = {
         "model": settings.llm_model,
         "api_key": settings.anthropic_api_key,
         "streaming": True,
@@ -81,7 +84,7 @@ def _anthropic_llm(temperature: float):
     return ChatAnthropic(**kwargs)
 
 
-def _ollama_llm(temperature: float):
+def _ollama_llm(temperature: float) -> BaseChatModel:
     from langchain_ollama import ChatOllama
 
     return ChatOllama(

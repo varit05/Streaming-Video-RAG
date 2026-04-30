@@ -7,7 +7,7 @@ Twitter/X videos, direct video URLs, etc.
 import json
 import subprocess
 from pathlib import Path
-from typing import Optional
+from typing import Any, ClassVar, cast
 
 from loguru import logger
 
@@ -20,7 +20,7 @@ class YouTubeIngester(BaseIngester):
     Downloads only the audio stream (no video download needed for RAG).
     """
 
-    SUPPORTED_DOMAINS = [
+    SUPPORTED_DOMAINS: ClassVar[list[str]] = [
         "youtube.com",
         "youtu.be",
         "youtube-nocookie.com",
@@ -36,7 +36,7 @@ class YouTubeIngester(BaseIngester):
         """Accept any http(s) URL — yt-dlp handles validation at runtime."""
         return source.startswith("http://") or source.startswith("https://")
 
-    def ingest(self, source: str, video_id: Optional[str] = None) -> VideoAsset:
+    def ingest(self, source: str, video_id: str | None = None) -> VideoAsset:
         if video_id is None:
             video_id = VideoAsset.generate_id()
 
@@ -50,7 +50,7 @@ class YouTubeIngester(BaseIngester):
         self._download_audio(source, audio_path)
 
         # ── Step 3: extract chapters if present ───────────────────────────────
-        chapters = [
+        chapters: list[dict[str, Any]] = [
             {
                 "title": ch.get("title", f"Chapter {i + 1}"),
                 "start": ch.get("start_time", 0),
@@ -82,7 +82,7 @@ class YouTubeIngester(BaseIngester):
 
     # ── Private helpers ──────────────────────────────────────────────────────
 
-    def _fetch_metadata(self, url: str) -> dict[str, object]:
+    def _fetch_metadata(self, url: str) -> dict[str, Any]:
         """Run yt-dlp in dump-only mode to get video metadata as JSON."""
         try:
             result = subprocess.run(
@@ -94,7 +94,7 @@ class YouTubeIngester(BaseIngester):
             if result.returncode != 0:
                 logger.warning(f"[YouTube] Metadata fetch warning: {result.stderr[:200]}")
                 return {}
-            return json.loads(result.stdout)
+            return cast(dict[str, Any], json.loads(result.stdout))
         except (subprocess.TimeoutExpired, json.JSONDecodeError, FileNotFoundError) as e:
             logger.warning(f"[YouTube] Metadata fetch failed: {e}")
             return {}

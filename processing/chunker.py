@@ -8,7 +8,6 @@ can link directly to the right moment in the video.
 """
 
 from dataclasses import dataclass, field
-from typing import Optional
 
 from loguru import logger
 
@@ -32,7 +31,7 @@ class VideoChunk:
     segment_index: int  # position among all chunks for this video
     title: str = ""
     source_url: str = ""
-    chapter: Optional[str] = None
+    chapter: str | None = None
     language: str = "en"
     extra_metadata: dict[str, object] = field(default_factory=dict)
 
@@ -52,7 +51,7 @@ class VideoChunk:
         h, m = divmod(m, 60)
         return f"{h:02d}:{m:02d}:{s:02d}"
 
-    def youtube_deep_link(self) -> Optional[str]:
+    def youtube_deep_link(self) -> str | None:
         """Return a ?t= deep link if the source is a YouTube URL."""
         if "youtu" in self.source_url:
             t = int(self.start_time)
@@ -91,8 +90,8 @@ class Chunker:
 
     def __init__(
         self,
-        chunk_duration: int = None,
-        chunk_overlap: int = None,
+        chunk_duration: int | None = None,
+        chunk_overlap: int | None = None,
     ):
         self.chunk_duration = chunk_duration or settings.chunk_duration_seconds
         self.chunk_overlap = chunk_overlap or settings.chunk_overlap_seconds
@@ -172,9 +171,12 @@ class Chunker:
 
     # ── Private helpers ──────────────────────────────────────────────────────
 
-    def _get_chapter(self, time: float, chapters: list[dict[str, str | float]]) -> Optional[str]:
+    def _get_chapter(self, time: float, chapters: list[dict[str, str | float]]) -> str | None:
         """Return the chapter title for the given timestamp, if chapters exist."""
         for ch in chapters:
-            if ch.get("start", 0) <= time < ch.get("end", float("inf")):
-                return ch.get("title")
+            start = float(ch.get("start", 0))
+            end = float(ch.get("end", float("inf")))
+            if start <= time < end:
+                title = ch.get("title")
+                return str(title) if title is not None else None
         return None
