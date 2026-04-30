@@ -4,7 +4,7 @@ Returns the answer text plus citations (video title + timestamp for each source)
 """
 
 from dataclasses import dataclass
-from typing import Optional
+from typing import Optional, cast
 
 from langchain_core.messages import HumanMessage, SystemMessage
 from loguru import logger
@@ -113,6 +113,7 @@ class QAChain:
         messages = [SystemMessage(content=SYSTEM_PROMPT), HumanMessage(content=user_message)]
         response = llm.invoke(messages)
         answer = response.content if hasattr(response, "content") else str(response)
+        answer = cast(str, answer)
 
         logger.success(f"[QA] Answer generated ({len(answer)} chars)")
 

@@ -85,7 +85,7 @@ def api_get(path: str, **kwargs):
         return None
 
 
-def api_post(path: str, json: dict[str, object]):
+def api_post(path: str, json: dict[str, object | None] | dict[str, str]):
     try:
         r = httpx.post(f"{API_BASE}{path}", json=json, timeout=REQUEST_TIMEOUT)
         r.raise_for_status()
