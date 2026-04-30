@@ -19,7 +19,7 @@ from storage.database import init_db
 
 
 @asynccontextmanager
-async def lifespan(app: FastAPI): # type: ignore
+async def lifespan(app: FastAPI):  # type: ignore
     """Startup and shutdown events."""
     # Startup
     logger.info("Starting Streaming Video-RAG API...")

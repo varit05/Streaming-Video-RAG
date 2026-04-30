@@ -3,7 +3,8 @@ Chroma vector store — recommended for local development.
 No server needed; persists to disk automatically.
 """
 
-from typing import Optional
+from typing import Optional, Any, Sequence, cast
+from chromadb.types import Where
 
 import chromadb
 from chromadb.config import Settings as ChromaSettings
@@ -38,7 +39,7 @@ class ChromaVectorStore(BaseVectorStore):
         metadatas = [c.to_metadata_dict() for c in chunks]
 
         # Chroma upserts by ID, so re-indexing a video is safe
-        self._collection.upsert(
+        self._collection.upsert(  # type: ignore[arg-type, unused-ignore]
             ids=ids,
             embeddings=embeddings,
             documents=documents,
@@ -54,7 +55,7 @@ class ChromaVectorStore(BaseVectorStore):
     ) -> list[SearchResult]:
         where = {"video_id": filter_video_id} if filter_video_id else None
 
-        results = self._collection.query(
+        results = self._collection.query(  # type: ignore[arg-type, unused-ignore]
             query_embeddings=[query_vector],
             n_results=min(top_k, self._collection.count() or 1),
             where=where,
@@ -62,10 +63,10 @@ class ChromaVectorStore(BaseVectorStore):
         )
 
         search_results = []
-        ids = results["ids"][0]
-        docs = results["documents"][0]
-        metas = results["metadatas"][0]
-        distances = results["distances"][0]
+        ids = results["ids"][0] if results["ids"] else []
+        docs = results["documents"][0] if results["documents"] else []
+        metas = results["metadatas"][0] if results["metadatas"] else []
+        distances = results["distances"][0] if results["distances"] else []
 
         for i, (doc_id, text, meta, dist) in enumerate(zip(ids, docs, metas, distances, strict=False)):
             if not meta or "video_id" not in meta:
@@ -76,16 +77,16 @@ class ChromaVectorStore(BaseVectorStore):
             score = max(0.0, 1.0 - dist / 2.0)
 
             chunk = VideoChunk(
-                chunk_id=meta.get("chunk_id", doc_id),
-                video_id=meta["video_id"],
+                chunk_id=str(meta.get("chunk_id", doc_id)),
+                video_id=str(meta["video_id"]),
                 text=text,
-                start_time=float(meta.get("start_time", 0)),
-                end_time=float(meta.get("end_time", 0)),
+                start_time=float(meta.get("start_time", 0.0)),
+                end_time=float(meta.get("end_time", 0.0)),
                 segment_index=int(meta.get("segment_index", i)),
-                title=meta.get("title", ""),
-                source_url=meta.get("source_url", ""),
-                chapter=meta.get("chapter") or None,
-                language=meta.get("language", "en"),
+                title=str(meta.get("title", "")),
+                source_url=str(meta.get("source_url", "")),
+                chapter=str(meta.get("chapter")) if meta.get("chapter") else None,
+                language=str(meta.get("language", "en")),
             )
             search_results.append(SearchResult(chunk=chunk, score=score))
 

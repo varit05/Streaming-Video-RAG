@@ -3,7 +3,7 @@ Qdrant vector store — recommended for production.
 Requires a running Qdrant server (see docker-compose.yml).
 """
 
-from typing import Optional
+from typing import Optional, Any, cast, Mapping
 
 from loguru import logger
 from qdrant_client import QdrantClient
@@ -24,8 +24,8 @@ from .base import BaseVectorStore, SearchResult
 
 
 class QdrantVectorStore(BaseVectorStore):
-    def __init__(self):
-        client_kwargs = {
+    def __init__(self) -> None:
+        client_kwargs: dict[str, Any] = {
             "url": settings.qdrant_url,
             "timeout": 30,
         }
@@ -36,10 +36,10 @@ class QdrantVectorStore(BaseVectorStore):
         if settings.qdrant_https:
             client_kwargs["https"] = True
 
-        self._client = QdrantClient(**client_kwargs)
+        self._client = cast(Any, QdrantClient(**client_kwargs))
         self._collection = settings.qdrant_collection
         # Infer dimension from embedder
-        self._dim = Embedder().dimension
+        self._dim = cast(Any, Embedder()).dimension
         self._ensure_collection()
         logger.info(f"[Qdrant] Connected — collection '{self._collection}', dim={self._dim}")
 
@@ -136,8 +136,8 @@ class QdrantVectorStore(BaseVectorStore):
                 count_filter=Filter(must=[FieldCondition(key="video_id", match=MatchValue(value=video_id))]),
                 exact=True,
             )
-            return result.count
-        return self._client.count(collection_name=self._collection, exact=True).count
+            return cast(int, result.count)
+        return cast(int, self._client.count(collection_name=self._collection, exact=True).count)
 
     @staticmethod
     def _chunk_id_to_int(chunk_id: str) -> int:

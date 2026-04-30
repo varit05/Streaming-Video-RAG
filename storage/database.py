@@ -5,11 +5,11 @@ Tracks video metadata and ingestion job state.
 
 import uuid
 from datetime import datetime
-from typing import Generator
+from typing import Generator, Literal
 
 from sqlalchemy import Column, DateTime, Float, Integer, String, Text, create_engine
 from sqlalchemy import Enum as SAEnum
-from sqlalchemy.orm import DeclarativeBase, Session, sessionmaker
+from sqlalchemy.orm import DeclarativeBase, Session, Mapped, sessionmaker
 
 from config import settings
 
@@ -48,7 +48,7 @@ class Video(Base):
     status = Column(
         SAEnum("pending", "processing", "indexed", "error", name="video_status"),
         default="pending",
-    )
+    )  # type: ignore[assignment]
     error_message = Column(Text, nullable=True)
     created_at = Column(DateTime, default=datetime.utcnow)
     indexed_at = Column(DateTime, nullable=True)
@@ -84,7 +84,7 @@ class IngestJob(Base):
     status = Column(
         SAEnum("queued", "ingesting", "transcribing", "indexing", "done", "error", name="job_status"),
         default="queued",
-    )
+    )  # type: ignore[assignment]
     progress_message = Column(String, nullable=True)  # e.g. "Transcribing audio..."
     error_message = Column(Text, nullable=True)
     created_at = Column(DateTime, default=datetime.utcnow)
