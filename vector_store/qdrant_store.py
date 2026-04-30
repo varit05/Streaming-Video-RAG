@@ -109,7 +109,7 @@ class QdrantVectorStore(BaseVectorStore):
                     results.append(SearchResult(chunk=chunk, score=float(hit.score)))
                 except Exception as hit_error:
                     logger.warning(f"[Qdrant] Failed to parse hit id={hit.id}: {hit_error}")
-                    continue            
+                    continue
 
         except Exception as e:
             logger.error(f"[Qdrant] Search failed: {e!s}")

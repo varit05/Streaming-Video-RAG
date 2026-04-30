@@ -2,7 +2,6 @@
 Pydantic request/response models for the FastAPI API.
 """
 
-
 from pydantic import BaseModel, Field
 
 # ── Ingest ───────────────────────────────────────────────────────────────────

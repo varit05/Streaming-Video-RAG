@@ -17,13 +17,11 @@ from .chunker import VideoChunk
 
 
 class SentenceTransformerProtocol(Protocol):
-    def encode(self, texts: list[str], **kwargs: Any) -> Any:
-        ...
+    def encode(self, texts: list[str], **kwargs: Any) -> Any: ...
 
 
 class OpenAIEmbeddingsProtocol(Protocol):
-    def create(self, **kwargs: Any) -> Any:
-        ...
+    def create(self, **kwargs: Any) -> Any: ...
 
 
 class OpenAIClientProtocol(Protocol):
@@ -48,7 +46,7 @@ class Embedder:
         if self.mode == EmbeddingMode.LOCAL:
             return 384  # all-MiniLM-L6-v2
         else:
-            
+
             if "large" in settings.openai_embedding_model:
                 return 3072
             return 1536
@@ -110,11 +108,14 @@ class Embedder:
 
             from openai import OpenAI
 
-            self._openai_client = cast(OpenAIClientProtocol, OpenAI(
-                api_key=settings.openai_api_key,
-                timeout=60.0,
-                max_retries=2,
-            ))
+            self._openai_client = cast(
+                OpenAIClientProtocol,
+                OpenAI(
+                    api_key=settings.openai_api_key,
+                    timeout=60.0,
+                    max_retries=2,
+                ),
+            )
         return self._openai_client
 
     # ── OpenAI embeddings ────────────────────────────────────────────────────

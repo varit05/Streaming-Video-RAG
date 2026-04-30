@@ -3,7 +3,6 @@ Retriever — wraps the vector store + embedder into a clean retrieval interface
 Used by QAChain, Summarizer, and SearchEngine.
 """
 
-
 from loguru import logger
 
 from config import settings

@@ -34,8 +34,7 @@ class LiveStreamIngester(BaseIngester):
             source.startswith("rtmp://")
             or source.startswith("rtmps://")
             or ".m3u8" in source
-            or (source.startswith("http")
-            and "stream" in source.lower())
+            or (source.startswith("http") and "stream" in source.lower())
         )
 
     def ingest(self, source: str, video_id: str | None = None) -> VideoAsset:

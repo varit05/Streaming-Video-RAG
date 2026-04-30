@@ -260,9 +260,7 @@ def _detect_source_type(source: str) -> str:
     return "local_file"
 
 
-def _get_ingester(
-    source_type: str, platform: str | None = None, credentials: dict[str, str] | None = None
-) -> Any:
+def _get_ingester(source_type: str, platform: str | None = None, credentials: dict[str, str] | None = None) -> Any:
     from ingestion import LiveStreamIngester, LocalFileIngester, YouTubeIngester
     from ingestion.video_api import get_api_ingester
 
