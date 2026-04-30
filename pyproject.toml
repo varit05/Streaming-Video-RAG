@@ -183,6 +183,13 @@ exclude = [
   "venv/",
   "node_modules/",
   ".git/",
+  ".*/torch/",
+  ".*/transformers/",
+  ".*/huggingface_hub/",
+  ".*/sentence_transformers/",
+  ".*/langchain/",
+  ".*/chromadb/",
+  ".*/qdrant_client/",
 ]
 
 [[tool.mypy.overrides]]

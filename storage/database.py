@@ -7,9 +7,9 @@ import uuid
 from datetime import datetime
 from typing import Generator, Literal
 
-from sqlalchemy import Column, DateTime, Float, Integer, String, Text, create_engine
+from sqlalchemy import DateTime, Float, Integer, String, Text, create_engine
 from sqlalchemy import Enum as SAEnum
-from sqlalchemy.orm import DeclarativeBase, Session, Mapped, sessionmaker
+from sqlalchemy.orm import DeclarativeBase, Session, Mapped, mapped_column, sessionmaker
 
 from config import settings
 
@@ -35,23 +35,23 @@ class Video(Base):
 
     __tablename__ = "videos"
 
-    id = Column(String, primary_key=True, default=lambda: str(uuid.uuid4()))
-    title = Column(String, nullable=False)
-    source_url = Column(String, nullable=False)
-    source_type = Column(String, nullable=False)  # youtube | local_file | live_stream | video_api
-    duration_seconds = Column(Float, nullable=True)
-    description = Column(Text, nullable=True)
-    uploader = Column(String, nullable=True)
-    upload_date = Column(String, nullable=True)
-    language = Column(String, default="en")
-    chunk_count = Column(Integer, default=0)
-    status = Column(
+    id: Mapped[str] = mapped_column(String, primary_key=True, default=lambda: str(uuid.uuid4()))
+    title: Mapped[str] = mapped_column(String, nullable=False)
+    source_url: Mapped[str] = mapped_column(String, nullable=False)
+    source_type: Mapped[str] = mapped_column(String, nullable=False)  # youtube | local_file | live_stream | video_api
+    duration_seconds: Mapped[float | None] = mapped_column(Float, nullable=True)
+    description: Mapped[str | None] = mapped_column(Text, nullable=True)
+    uploader: Mapped[str | None] = mapped_column(String, nullable=True)
+    upload_date: Mapped[str | None] = mapped_column(String, nullable=True)
+    language: Mapped[str] = mapped_column(String, default="en")
+    chunk_count: Mapped[int] = mapped_column(Integer, default=0)
+    status: Mapped[str] = mapped_column(
         SAEnum("pending", "processing", "indexed", "error", name="video_status"),
         default="pending",
-    )  # type: ignore[assignment]
-    error_message = Column(Text, nullable=True)
-    created_at = Column(DateTime, default=datetime.utcnow)
-    indexed_at = Column(DateTime, nullable=True)
+    )
+    error_message: Mapped[str | None] = mapped_column(Text, nullable=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
+    indexed_at: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
 
     def to_dict(self) -> dict[str, object]:
         return {
@@ -77,18 +77,18 @@ class IngestJob(Base):
 
     __tablename__ = "ingest_jobs"
 
-    id = Column(String, primary_key=True, default=lambda: str(uuid.uuid4()))
-    video_id = Column(String, nullable=True)  # populated once ingestion starts
-    source = Column(String, nullable=False)  # original source URL or path
-    source_type = Column(String, nullable=False)
-    status = Column(
+    id: Mapped[str] = mapped_column(String, primary_key=True, default=lambda: str(uuid.uuid4()))
+    video_id: Mapped[str | None] = mapped_column(String, nullable=True)  # populated once ingestion starts
+    source: Mapped[str] = mapped_column(String, nullable=False)  # original source URL or path
+    source_type: Mapped[str] = mapped_column(String, nullable=False)
+    status: Mapped[str] = mapped_column(
         SAEnum("queued", "ingesting", "transcribing", "indexing", "done", "error", name="job_status"),
         default="queued",
-    )  # type: ignore[assignment]
-    progress_message = Column(String, nullable=True)  # e.g. "Transcribing audio..."
-    error_message = Column(Text, nullable=True)
-    created_at = Column(DateTime, default=datetime.utcnow)
-    completed_at = Column(DateTime, nullable=True)
+    )
+    progress_message: Mapped[str | None] = mapped_column(String, nullable=True)  # e.g. "Transcribing audio..."
+    error_message: Mapped[str | None] = mapped_column(Text, nullable=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
+    completed_at: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
 
     def to_dict(self) -> dict[str, object]:
         return {

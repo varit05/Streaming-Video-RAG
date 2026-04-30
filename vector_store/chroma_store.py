@@ -39,11 +39,11 @@ class ChromaVectorStore(BaseVectorStore):
         metadatas = [c.to_metadata_dict() for c in chunks]
 
         # Chroma upserts by ID, so re-indexing a video is safe
-        self._collection.upsert(  # type: ignore[arg-type, unused-ignore]
-            ids=ids,
-            embeddings=embeddings,
-            documents=documents,
-            metadatas=metadatas,
+        self._collection.upsert(
+            ids=cast(Sequence[str | None], ids),
+            embeddings=cast(Sequence[Sequence[float | int] | None], embeddings),
+            documents=cast(Sequence[str | None], documents),
+            metadatas=cast(Sequence[dict[str, Any] | None], metadatas),
         )
         logger.info(f"[Chroma] Upserted {len(chunks)} chunks")
 
@@ -53,10 +53,10 @@ class ChromaVectorStore(BaseVectorStore):
         top_k: int = 5,
         filter_video_id: Optional[str] = None,
     ) -> list[SearchResult]:
-        where = {"video_id": filter_video_id} if filter_video_id else None
+        where = cast(Where | None, {"video_id": filter_video_id} if filter_video_id else None)
 
-        results = self._collection.query(  # type: ignore[arg-type, unused-ignore]
-            query_embeddings=[query_vector],
+        results = self._collection.query(
+            query_embeddings=cast(Sequence[Sequence[float | int] | None], [query_vector]),
             n_results=min(top_k, self._collection.count() or 1),
             where=where,
             include=["documents", "metadatas", "distances"],
@@ -80,9 +80,9 @@ class ChromaVectorStore(BaseVectorStore):
                 chunk_id=str(meta.get("chunk_id", doc_id)),
                 video_id=str(meta["video_id"]),
                 text=text,
-                start_time=float(meta.get("start_time", 0.0)),
-                end_time=float(meta.get("end_time", 0.0)),
-                segment_index=int(meta.get("segment_index", i)),
+                start_time=float(cast(float, meta.get("start_time", 0.0))),
+                end_time=float(cast(float, meta.get("end_time", 0.0))),
+                segment_index=int(cast(int, meta.get("segment_index", i))),
                 title=str(meta.get("title", "")),
                 source_url=str(meta.get("source_url", "")),
                 chapter=str(meta.get("chapter")) if meta.get("chapter") else None,
