@@ -9,23 +9,23 @@ from pathlib import Path
 from pydantic_settings import BaseSettings
 
 
-class LLMProvider(enum.strEnum):
+class LLMProvider(enum.StrEnum):
     OPENAI = "openai"
     ANTHROPIC = "anthropic"
     OLLAMA = "ollama"
 
 
-class WhisperMode(enum.strEnum):
+class WhisperMode(enum.StrEnum):
     LOCAL = "local"
     OPENAI_API = "openai_api"
 
 
-class EmbeddingMode(enum.strEnum):
+class EmbeddingMode(enum.StrEnum):
     LOCAL = "local"
     OPENAI = "openai"
 
 
-class VectorStoreType(enum.strEnum):
+class VectorStoreType(enum.StrEnum):
     CHROMA = "chroma"
     QDRANT = "qdrant"
 

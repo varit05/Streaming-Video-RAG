@@ -7,7 +7,7 @@ Twitter/X videos, direct video URLs, etc.
 import json
 import subprocess
 from pathlib import Path
-from typing import Any, cast
+from typing import Any, ClassVar, cast
 
 from loguru import logger
 
@@ -20,7 +20,7 @@ class YouTubeIngester(BaseIngester):
     Downloads only the audio stream (no video download needed for RAG).
     """
 
-    SUPPORTED_DOMAINS = [
+    SUPPORTED_DOMAINS: ClassVar[list[str]] = [
         "youtube.com",
         "youtu.be",
         "youtube-nocookie.com",

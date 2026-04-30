@@ -140,7 +140,7 @@ select = [
   "TRY",# try/except
   "PERF"# performance
 ]
-ignore = ["E501"]
+ignore = ["E501", "TRY003", "TRY301"]
 fixable = ["ALL"]
 unfixable = []
 
@@ -148,7 +148,7 @@ unfixable = []
 docstring-code-format = true
 quote-style = "double"
 
-[tool.ruff.isort]
+[tool.ruff.lint.isort]
 known-first-party = ["api", "ingestion", "llm", "processing", "rag", "storage", "transcription", "ui", "vector_store"]
 section-order = ["future", "standard-library", "third-party", "first-party", "local-folder"]
 

@@ -191,7 +191,7 @@ def _run_ingest_pipeline(
             db.rollback()
             video = db.query(Video).filter(Video.id == asset.video_id).first()
             if video is None:
-                raise RuntimeError(f"Video {asset.video_id} not found after merge")
+                raise RuntimeError(f"Video {asset.video_id} not found after merge") from None
 
         # ── Step 3: Transcribe ────────────────────────────────────────────────
         transcriber = _get_transcriber()

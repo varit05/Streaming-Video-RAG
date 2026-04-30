@@ -172,9 +172,7 @@ class Summarizer:
         prompt = CHAPTER_TEMPLATE.format(chapter_content=chapter_content)
         response = llm.invoke([SystemMessage(content=MAP_SYSTEM), HumanMessage(content=prompt)])
 
-        result = []
-        for ch in chapters:
-            result.append({"chapter": ch, "summary": ""})
+        result = [{"chapter": ch, "summary": ""} for ch in chapters]
 
         # Parse the response text to extract per-chapter summaries
         content = cast(str, response.content)
