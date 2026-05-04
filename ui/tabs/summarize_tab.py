@@ -1,6 +1,7 @@
 """
 Summarize Tab Component
 """
+
 import streamlit as st
 from utils import api_get, api_post
 

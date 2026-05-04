@@ -1,6 +1,7 @@
 """
 Shared utilities and API helpers for Streaming Video-RAG UI
 """
+
 import os
 import time
 
@@ -78,11 +79,11 @@ def load_video_options():
     """Load available videos for selection dropdowns"""
     videos_data = api_get("/videos", params={"status": "indexed", "limit": 100})
     video_options = {"All videos": None}
-    
+
     if videos_data and videos_data.get("videos"):
         for v in videos_data["videos"]:
             video_options[f"{v['title'][:50]} ({v['id'][:8]})"] = v["id"]
-    
+
     return video_options, videos_data
 
 
