@@ -3,12 +3,12 @@ Streaming Video-RAG — Streamlit UI
 Run: streamlit run ui/app.py
 """
 import streamlit as st
-from utils import api_get, apply_custom_css, load_video_options
 from tabs.ingest_tab import render_ingest_tab
+from tabs.library_tab import render_library_tab
 from tabs.qa_tab import render_qa_tab
 from tabs.search_tab import render_search_tab
 from tabs.summarize_tab import render_summarize_tab
-from tabs.library_tab import render_library_tab
+from utils import api_get, apply_custom_css, load_video_options
 
 st.set_page_config(
     page_title="Video RAG",

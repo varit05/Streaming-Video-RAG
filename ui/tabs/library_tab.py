@@ -3,7 +3,7 @@ Library Tab Component
 """
 import httpx
 import streamlit as st
-from utils import api_get, API_BASE
+from utils import API_BASE, api_get
 
 
 def render_library_tab():

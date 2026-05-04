@@ -3,6 +3,7 @@ Shared utilities and API helpers for Streaming Video-RAG UI
 """
 import os
 import time
+
 import httpx
 import streamlit as st
 
