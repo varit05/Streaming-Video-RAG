@@ -48,6 +48,7 @@ dependencies = [
 
   # RAG
   "tiktoken>=0.7",
+  "nltk>=3.8.1",
 
   # Storage
   "sqlalchemy>=2.0",
