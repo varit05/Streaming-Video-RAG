@@ -23,6 +23,7 @@ RUN apt-get update && apt-get install -y \
     ffmpeg \
     git \
     curl \
+    tini \
     && rm -rf /var/lib/apt/lists/*
 
 WORKDIR /app
@@ -36,8 +37,14 @@ COPY . .
 
 # Create data directories
 RUN mkdir -p data/audio data/transcripts data/chroma
+RUN chmod -R 777 data/
+
+# Pre-download NLTK data during build to avoid runtime failures
+RUN python -c "import nltk; nltk.download('punkt', quiet=True)"
 
 EXPOSE 8000 8501
+
+ENTRYPOINT ["tini", "--"]
 
 # Default command: run the Streamlit UI app
 CMD ["streamlit", "run", "ui/app.py", "--server.port=8501", "--server.address=0.0.0.0"]
