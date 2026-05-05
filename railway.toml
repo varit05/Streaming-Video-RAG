@@ -1,0 +1,12 @@
+[build]
+  cache = true
+  buildpacks = []
+
+[deploy]
+  healthcheckPath = "/health"
+  healthcheckTimeout = 120
+  healthcheckInterval = 10
+  restartPolicyType = "always"
+
+[env]
+  PYTHONUNBUFFERED = "true"

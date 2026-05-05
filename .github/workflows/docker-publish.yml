@@ -10,7 +10,7 @@ env:
   IMAGE_NAME: ${{ github.repository }}
 
 jobs:
-  lint:
+  develop:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
@@ -45,7 +45,7 @@ jobs:
 
   build-and-push:
     runs-on: ubuntu-latest
-    needs: [lint]
+    needs: [develop]
     permissions:
       contents: read
       packages: write

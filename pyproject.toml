@@ -110,7 +110,17 @@ exclude = '''
   | .venv
   | venv
   | node_modules
+  | data
+  | certs
+  | .github
+  | migrations
 )/
+| \.env.*
+| docker-compose\.yml
+| Dockerfile
+| railway\.toml
+| \.gitignore
+| \.pre-commit-config\.yaml
 '''
 
 [tool.ruff]
