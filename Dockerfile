@@ -47,4 +47,5 @@ EXPOSE 8000 8501
 ENTRYPOINT ["tini", "--"]
 
 # Default command: run the Streamlit UI app
-CMD ["streamlit", "run", "ui/app.py", "--server.port=8501", "--server.address=0.0.0.0"]
+# IMPORTANT: Shell form required for Railway $PORT environment variable expansion
+CMD streamlit run ui/app.py --server.port=${PORT:-8501} --server.address=0.0.0.0
