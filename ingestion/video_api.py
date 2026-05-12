@@ -24,7 +24,9 @@ class VideoAPIIngester(BaseIngester):
     Subclasses implement _fetch_metadata() and _get_download_url().
     """
 
-    def __init__(self, credentials: dict[str, str], audio_dir: str = "./data/audio"):
+    def __init__(
+        self, credentials: dict[str, str], audio_dir: str = "./data/audio"
+    ) -> None:
         super().__init__(audio_dir)
         self.credentials = credentials
         self.session = requests.Session()
@@ -199,7 +201,9 @@ class TwitchIngester(VideoAPIIngester):
 
     def _fetch_vod_metadata(self, vod_id: str) -> dict[str, Any]:
         try:
-            resp = self.session.get(f"{self.API_BASE}/videos", params={"id": vod_id}, timeout=30)
+            resp = self.session.get(
+                f"{self.API_BASE}/videos", params={"id": vod_id}, timeout=30
+            )
             resp.raise_for_status()
             data = resp.json().get("data", [])
             return data[0] if data else {}
@@ -247,7 +251,9 @@ class TwitchIngester(VideoAPIIngester):
 # ── Factory ──────────────────────────────────────────────────────────────────
 
 
-def get_api_ingester(platform: str, credentials: dict[str, str], audio_dir: str = "./data/audio") -> VideoAPIIngester:
+def get_api_ingester(
+    platform: str, credentials: dict[str, str], audio_dir: str = "./data/audio"
+) -> VideoAPIIngester:
     """
     Factory: return the right VideoAPIIngester for the given platform name.
 
@@ -265,5 +271,7 @@ def get_api_ingester(platform: str, credentials: dict[str, str], audio_dir: str 
     }
     cls = registry.get(platform.lower())
     if cls is None:
-        raise ValueError(f"Unknown platform '{platform}'. Supported: {list(registry.keys())}")
+        raise ValueError(
+            f"Unknown platform '{platform}'. Supported: {list(registry.keys())}"
+        )
     return cls(credentials=credentials, audio_dir=audio_dir)

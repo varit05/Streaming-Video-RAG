@@ -20,7 +20,7 @@ COLLECTION_NAME = "video_rag"
 
 
 class ChromaVectorStore(BaseVectorStore):
-    def __init__(self):
+    def __init__(self) -> None:
         self._client = chromadb.PersistentClient(
             path=settings.chroma_persist_dir,
             settings=ChromaSettings(anonymized_telemetry=False),
@@ -29,9 +29,13 @@ class ChromaVectorStore(BaseVectorStore):
             name=COLLECTION_NAME,
             metadata={"hnsw:space": "cosine"},
         )
-        logger.info(f"[Chroma] Connected — collection '{COLLECTION_NAME}', {self._collection.count()} chunks indexed")
+        logger.info(
+            f"[Chroma] Connected — collection '{COLLECTION_NAME}', {self._collection.count()} chunks indexed"
+        )
 
-    def add_chunks(self, chunks: list[VideoChunk], embeddings: list[list[float]]) -> None:
+    def add_chunks(
+        self, chunks: list[VideoChunk], embeddings: list[list[float]]
+    ) -> None:
         if not chunks:
             return
 
@@ -54,10 +58,14 @@ class ChromaVectorStore(BaseVectorStore):
         top_k: int = 5,
         filter_video_id: str | None = None,
     ) -> list[SearchResult]:
-        where = cast(Where | None, {"video_id": filter_video_id} if filter_video_id else None)
+        where = cast(
+            Where | None, {"video_id": filter_video_id} if filter_video_id else None
+        )
 
         results = self._collection.query(
-            query_embeddings=cast(Sequence[Sequence[float | int] | None], [query_vector]),
+            query_embeddings=cast(
+                Sequence[Sequence[float | int] | None], [query_vector]
+            ),
             n_results=min(top_k, self._collection.count() or 1),
             where=where,
             include=["documents", "metadatas", "distances"],
@@ -69,9 +77,13 @@ class ChromaVectorStore(BaseVectorStore):
         metas = results["metadatas"][0] if results["metadatas"] else []
         distances = results["distances"][0] if results["distances"] else []
 
-        for i, (doc_id, text, meta, dist) in enumerate(zip(ids, docs, metas, distances, strict=False)):
+        for i, (doc_id, text, meta, dist) in enumerate(
+            zip(ids, docs, metas, distances, strict=False)
+        ):
             if not meta or "video_id" not in meta:
-                logger.warning(f"[Chroma] Skipping result {doc_id!r} — missing metadata")
+                logger.warning(
+                    f"[Chroma] Skipping result {doc_id!r} — missing metadata"
+                )
                 continue
             # Chroma returns cosine distance (0=identical, 2=opposite)
             # Convert to similarity score: 1 - dist/2
@@ -98,7 +110,9 @@ class ChromaVectorStore(BaseVectorStore):
         ids_to_delete = existing["ids"]
         if ids_to_delete:
             self._collection.delete(ids=ids_to_delete)
-        logger.info(f"[Chroma] Deleted {len(ids_to_delete)} chunks for video {video_id}")
+        logger.info(
+            f"[Chroma] Deleted {len(ids_to_delete)} chunks for video {video_id}"
+        )
         return len(ids_to_delete)
 
     def count(self, video_id: str | None = None) -> int:

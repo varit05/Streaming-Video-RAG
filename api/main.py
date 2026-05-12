@@ -7,6 +7,7 @@ Run:
     python -m uvicorn api.main:app --host 0.0.0.0 --port 8000
 """
 
+from collections.abc import AsyncGenerator
 from contextlib import asynccontextmanager
 
 from fastapi import FastAPI
@@ -19,7 +20,7 @@ from storage.database import init_db
 
 
 @asynccontextmanager
-async def lifespan(app: FastAPI):  # type: ignore
+async def lifespan(_app: FastAPI) -> AsyncGenerator[None, None]:
     """Startup and shutdown events."""
     # Startup
     logger.info("Starting Streaming Video-RAG API...")
@@ -69,7 +70,11 @@ def health() -> dict[str, str]:
     return {
         "status": "ok",
         "llm_provider": settings.llm_provider.value,
-        "llm_model": settings.llm_model if settings.llm_provider.value != "ollama" else settings.ollama_model,
+        "llm_model": (
+            settings.llm_model
+            if settings.llm_provider.value != "ollama"
+            else settings.ollama_model
+        ),
         "whisper_mode": settings.whisper_mode.value,
         "whisper_model": settings.whisper_model_size,
         "embedding_mode": settings.embedding_mode.value,

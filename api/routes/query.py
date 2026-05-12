@@ -46,8 +46,14 @@ def query_videos(request: QueryRequest) -> QueryResponse:
     )
 
 
-@router.post("/summarize", response_model=SummarizeResponse, responses={404: {"description": "Video not found"}})
-def summarize_video(request: SummarizeRequest, db: Annotated[Session, Depends(get_db)]) -> SummarizeResponse:
+@router.post(
+    "/summarize",
+    response_model=SummarizeResponse,
+    responses={404: {"description": "Video not found"}},
+)
+def summarize_video(
+    request: SummarizeRequest, db: Annotated[Session, Depends(get_db)]
+) -> SummarizeResponse:
     """
     Generate a summary of an indexed video.
     Uses map-reduce to handle long videos gracefully.
@@ -56,7 +62,9 @@ def summarize_video(request: SummarizeRequest, db: Annotated[Session, Depends(ge
 
     video = db.query(Video).filter(Video.id == request.video_id).first()
     if not video:
-        raise HTTPException(status_code=404, detail=f"Video {request.video_id!r} not found")
+        raise HTTPException(
+            status_code=404, detail=f"Video {request.video_id!r} not found"
+        )
 
     summarizer = Summarizer()
     result = summarizer.summarize(
@@ -68,7 +76,8 @@ def summarize_video(request: SummarizeRequest, db: Annotated[Session, Depends(ge
     chapter_summaries = None
     if result.chapter_summaries:
         chapter_summaries = [
-            ChapterSummary(chapter=c["chapter"], summary=c["summary"]) for c in result.chapter_summaries
+            ChapterSummary(chapter=c["chapter"], summary=c["summary"])
+            for c in result.chapter_summaries
         ]
 
     return SummarizeResponse(

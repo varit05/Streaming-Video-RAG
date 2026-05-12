@@ -4,6 +4,7 @@ Shared utilities and API helpers for Streaming Video-RAG UI
 
 import os
 import time
+from typing import Any
 
 import httpx
 import streamlit as st
@@ -12,7 +13,7 @@ API_BASE = os.getenv("UI_API_BASE_URL", "http://localhost:8000")
 REQUEST_TIMEOUT = int(os.getenv("UI_REQUEST_TIMEOUT", 600))
 
 
-def api_get(path: str, **kwargs):
+def api_get(path: str, **kwargs: Any) -> Any:
     try:
         r = httpx.get(f"{API_BASE}{path}", timeout=30, **kwargs)
         r.raise_for_status()
@@ -35,7 +36,7 @@ def api_get(path: str, **kwargs):
         return None
 
 
-def api_post(path: str, json: dict[str, object | None] | dict[str, str]):
+def api_post(path: str, json: dict[str, object | None] | dict[str, str]) -> Any:
     try:
         r = httpx.post(f"{API_BASE}{path}", json=json, timeout=REQUEST_TIMEOUT)
         r.raise_for_status()
@@ -60,7 +61,9 @@ def api_post(path: str, json: dict[str, object | None] | dict[str, str]):
         return None
 
 
-def poll_job(job_id: str, placeholder: st.delta_generator.DeltaGenerator) -> dict[str, object]:
+def poll_job(
+    job_id: str, placeholder: st.delta_generator.DeltaGenerator
+) -> dict[str, object]:
     """Poll ingestion job until done or error."""
     for _ in range(300):  # max ~5 minutes
         data = api_get(f"/ingest/{job_id}")
@@ -75,7 +78,7 @@ def poll_job(job_id: str, placeholder: st.delta_generator.DeltaGenerator) -> dic
     return {}
 
 
-def load_video_options():
+def load_video_options() -> tuple[dict[str, str | None], Any]:
     """Load available videos for selection dropdowns"""
     videos_data = api_get("/videos", params={"status": "indexed", "limit": 100})
     video_options = {"All videos": None}
@@ -87,7 +90,7 @@ def load_video_options():
     return video_options, videos_data
 
 
-def apply_custom_css():
+def apply_custom_css() -> None:
     """Apply custom CSS styles"""
     st.markdown(
         """

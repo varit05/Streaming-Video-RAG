@@ -17,7 +17,9 @@ from config import settings
 
 engine = create_engine(
     settings.database_url,
-    connect_args={"check_same_thread": False} if "sqlite" in settings.database_url else {},
+    connect_args=(
+        {"check_same_thread": False} if "sqlite" in settings.database_url else {}
+    ),
     echo=False,
 )
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
@@ -35,10 +37,14 @@ class Video(Base):
 
     __tablename__ = "videos"
 
-    id: Mapped[str] = mapped_column(String, primary_key=True, default=lambda: str(uuid.uuid4()))
+    id: Mapped[str] = mapped_column(
+        String, primary_key=True, default=lambda: str(uuid.uuid4())
+    )
     title: Mapped[str] = mapped_column(String, nullable=False)
     source_url: Mapped[str] = mapped_column(String, nullable=False)
-    source_type: Mapped[str] = mapped_column(String, nullable=False)  # youtube | local_file | live_stream | video_api
+    source_type: Mapped[str] = mapped_column(
+        String, nullable=False
+    )  # youtube | local_file | live_stream | video_api
     duration_seconds: Mapped[float | None] = mapped_column(Float, nullable=True)
     description: Mapped[str | None] = mapped_column(Text, nullable=True)
     uploader: Mapped[str | None] = mapped_column(String, nullable=True)
@@ -77,15 +83,31 @@ class IngestJob(Base):
 
     __tablename__ = "ingest_jobs"
 
-    id: Mapped[str] = mapped_column(String, primary_key=True, default=lambda: str(uuid.uuid4()))
-    video_id: Mapped[str | None] = mapped_column(String, nullable=True)  # populated once ingestion starts
-    source: Mapped[str] = mapped_column(String, nullable=False)  # original source URL or path
+    id: Mapped[str] = mapped_column(
+        String, primary_key=True, default=lambda: str(uuid.uuid4())
+    )
+    video_id: Mapped[str | None] = mapped_column(
+        String, nullable=True
+    )  # populated once ingestion starts
+    source: Mapped[str] = mapped_column(
+        String, nullable=False
+    )  # original source URL or path
     source_type: Mapped[str] = mapped_column(String, nullable=False)
     status: Mapped[str] = mapped_column(
-        SAEnum("queued", "ingesting", "transcribing", "indexing", "done", "error", name="job_status"),
+        SAEnum(
+            "queued",
+            "ingesting",
+            "transcribing",
+            "indexing",
+            "done",
+            "error",
+            name="job_status",
+        ),
         default="queued",
     )
-    progress_message: Mapped[str | None] = mapped_column(String, nullable=True)  # e.g. "Transcribing audio..."
+    progress_message: Mapped[str | None] = mapped_column(
+        String, nullable=True
+    )  # e.g. "Transcribing audio..."
     error_message: Mapped[str | None] = mapped_column(Text, nullable=True)
     created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
     completed_at: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
@@ -100,7 +122,9 @@ class IngestJob(Base):
             "progress_message": self.progress_message,
             "error_message": self.error_message,
             "created_at": self.created_at.isoformat() if self.created_at else None,
-            "completed_at": self.completed_at.isoformat() if self.completed_at else None,
+            "completed_at": (
+                self.completed_at.isoformat() if self.completed_at else None
+            ),
         }
 
 

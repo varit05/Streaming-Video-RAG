@@ -35,7 +35,7 @@ class Embedder:
     Lazy-loads the model on first use.
     """
 
-    def __init__(self):
+    def __init__(self) -> None:
         self.mode = settings.embedding_mode
         self._local_model: SentenceTransformerProtocol | None = None
         self._openai_client: OpenAIClientProtocol | None = None
@@ -46,7 +46,6 @@ class Embedder:
         if self.mode == EmbeddingMode.LOCAL:
             return 384  # all-MiniLM-L6-v2
         else:
-
             if "large" in settings.openai_embedding_model:
                 return 3072
             return 1536
@@ -67,9 +66,15 @@ class Embedder:
         texts = [c.text for c in chunks]
         logger.info(f"[Embedder/{self.mode.value}] Embedding {len(texts)} chunks...")
 
-        vectors = self._embed_local(texts) if self.mode == EmbeddingMode.LOCAL else self._embed_openai(texts)
+        vectors = (
+            self._embed_local(texts)
+            if self.mode == EmbeddingMode.LOCAL
+            else self._embed_openai(texts)
+        )
 
-        logger.success(f"[Embedder] Done — {len(vectors)} vectors, dim={self.dimension}")
+        logger.success(
+            f"[Embedder] Done — {len(vectors)} vectors, dim={self.dimension}"
+        )
         return vectors
 
     def embed_query(self, query: str) -> list[float]:
@@ -103,7 +108,9 @@ class Embedder:
     def _get_openai_client(self) -> OpenAIClientProtocol:
         if self._openai_client is None:
             if not settings.openai_api_key:
-                raise RuntimeError("OPENAI_API_KEY is not set. Required when EMBEDDING_MODE=openai.")
+                raise RuntimeError(
+                    "OPENAI_API_KEY is not set. Required when EMBEDDING_MODE=openai."
+                )
             from typing import cast
 
             from openai import OpenAI
@@ -134,7 +141,9 @@ class Embedder:
             # Truncate to avoid token limit (8191 tokens for text-embedding-3-*)
             batch = [t[:8000] for t in batch]
             response = client.embeddings.create(model=model, input=batch)
-            batch_embeddings = [item.embedding for item in sorted(response.data, key=lambda x: x.index)]
+            batch_embeddings = [
+                item.embedding for item in sorted(response.data, key=lambda x: x.index)
+            ]
             all_embeddings.extend(batch_embeddings)
 
         return all_embeddings

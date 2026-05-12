@@ -31,7 +31,9 @@ class VideoAsset:
     local_audio_path: Path  # Path to extracted 16kHz mono WAV
     duration_seconds: float | None = None
     description: str | None = None
-    chapters: list[dict[str, str | float]] = field(default_factory=list)  # [{title, start, end}]
+    chapters: list[dict[str, str | float]] = field(
+        default_factory=list
+    )  # [{title, start, end}]
     thumbnail_url: str | None = None
     uploader: str | None = None
     upload_date: str | None = None
@@ -50,7 +52,7 @@ class BaseIngester(ABC):
       3. Returns a VideoAsset ready for the transcription stage
     """
 
-    def __init__(self, audio_dir: str = "./data/audio"):
+    def __init__(self, audio_dir: str = "./data/audio") -> None:
         self.audio_dir = Path(audio_dir)
         self.audio_dir.mkdir(parents=True, exist_ok=True)
 
