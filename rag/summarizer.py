@@ -62,7 +62,7 @@ class Summarizer:
     Generates summaries of indexed videos using map-reduce over chunks.
     """
 
-    def __init__(self):
+    def __init__(self) -> None:
         self.store = get_vector_store()
 
     def summarize(
@@ -90,7 +90,9 @@ class Summarizer:
 
         dim = 1536 if settings.embedding_mode == EmbeddingMode.OPENAI else 384
         dummy_vector = [0.0] * dim
-        all_results = self.store.search(dummy_vector, top_k=9999, filter_video_id=video_id)
+        all_results = self.store.search(
+            dummy_vector, top_k=9999, filter_video_id=video_id
+        )
 
         # Sort by start time
         all_results.sort(key=lambda r: r.chunk.start_time)
@@ -140,7 +142,9 @@ class Summarizer:
                 end_ts=r.chunk.end_ts,
                 text=r.chunk.text,
             )
-            response = llm.invoke([SystemMessage(content=MAP_SYSTEM), HumanMessage(content=prompt)])
+            response = llm.invoke(
+                [SystemMessage(content=MAP_SYSTEM), HumanMessage(content=prompt)]
+            )
             content = cast(str, response.content)
             summaries.append(content.strip())
 
@@ -149,13 +153,19 @@ class Summarizer:
     def _reduce(self, summaries: list[str], title: str) -> str:
         """Combine chunk summaries into a final overall summary (reduce phase)."""
         llm = get_llm(temperature=0.3)
-        combined = "\n\n".join(f"[Section {i + 1}] {s}" for i, s in enumerate(summaries))
+        combined = "\n\n".join(
+            f"[Section {i + 1}] {s}" for i, s in enumerate(summaries)
+        )
         prompt = REDUCE_TEMPLATE.format(title=title, summaries=combined)
-        response = llm.invoke([SystemMessage(content=REDUCE_SYSTEM), HumanMessage(content=prompt)])
+        response = llm.invoke(
+            [SystemMessage(content=REDUCE_SYSTEM), HumanMessage(content=prompt)]
+        )
         content = cast(str, response.content)
         return content.strip()
 
-    def _group_by_chapter(self, results: list[SearchResult]) -> dict[str, list[SearchResult]]:
+    def _group_by_chapter(
+        self, results: list[SearchResult]
+    ) -> dict[str, list[SearchResult]]:
         """Group chunks by their chapter label."""
         grouped: dict[str, list[SearchResult]] = {}
         for r in results:
@@ -163,14 +173,19 @@ class Summarizer:
             grouped.setdefault(key, []).append(r)
         return grouped
 
-    def _summarize_chapters(self, chapters: dict[str, list[SearchResult]]) -> list[dict[str, str]]:
+    def _summarize_chapters(
+        self, chapters: dict[str, list[SearchResult]]
+    ) -> list[dict[str, str]]:
         """Generate a brief summary for each chapter."""
         llm = get_llm(temperature=0.2)
         chapter_content = "\n\n".join(
-            f"Chapter: {ch}\nContent: {' '.join(r.chunk.text for r in chunks[:3])}" for ch, chunks in chapters.items()
+            f"Chapter: {ch}\nContent: {' '.join(r.chunk.text for r in chunks[:3])}"
+            for ch, chunks in chapters.items()
         )
         prompt = CHAPTER_TEMPLATE.format(chapter_content=chapter_content)
-        response = llm.invoke([SystemMessage(content=MAP_SYSTEM), HumanMessage(content=prompt)])
+        response = llm.invoke(
+            [SystemMessage(content=MAP_SYSTEM), HumanMessage(content=prompt)]
+        )
 
         result = [{"chapter": ch, "summary": ""} for ch in chapters]
 
@@ -184,7 +199,9 @@ class Summarizer:
             for i, ch in enumerate(chapters.keys()):
                 if ch.lower() in line.lower():
                     if buffer and current_chapter_idx < len(result):
-                        result[current_chapter_idx]["summary"] = " ".join(buffer).strip()
+                        result[current_chapter_idx]["summary"] = " ".join(
+                            buffer
+                        ).strip()
                     current_chapter_idx = i
                     buffer = []
                     matched = True

@@ -7,7 +7,7 @@ import streamlit as st
 from utils import API_BASE, api_get
 
 
-def render_library_tab():
+def render_library_tab() -> None:
     st.header("Video Library")
     st.caption("All videos that have been ingested into your RAG system.")
 
@@ -30,17 +30,24 @@ def render_library_tab():
                     st.metric("Chunks", v.get("chunk_count", 0))
                 with col2:
                     dur = v.get("duration_seconds")
-                    st.metric("Duration", f"{int(dur // 60)}m {int(dur % 60)}s" if dur else "—")
+                    st.metric(
+                        "Duration",
+                        f"{int(dur // 60)}m {int(dur % 60)}s" if dur else "—",
+                    )
                 with col3:
                     st.metric("Language", v.get("language", "—").upper())
 
-                st.caption(f"ID: `{v['id']}`  ·  Type: `{v['source_type']}`  ·  Status: `{v['status']}`")
+                st.caption(
+                    f"ID: `{v['id']}`  ·  Type: `{v['source_type']}`  ·  Status: `{v['status']}`"
+                )
                 if v.get("source_url"):
                     st.caption(f"Source: {v['source_url'][:80]}")
                 if v.get("error_message"):
                     st.error(f"Error: {v['error_message']}")
 
-                if v["status"] == "indexed" and st.button("🗑 Delete", key=f"del_{v['id']}"):
+                if v["status"] == "indexed" and st.button(
+                    "🗑 Delete", key=f"del_{v['id']}"
+                ):
                     result = httpx.delete(f"{API_BASE}/videos/{v['id']}", timeout=30)
                     if result.status_code == 200:
                         st.success("Deleted")
@@ -48,4 +55,6 @@ def render_library_tab():
                     else:
                         st.error("Delete failed")
     else:
-        st.info("No videos in the library yet. Head to the Ingest tab to add your first video.")
+        st.info(
+            "No videos in the library yet. Head to the Ingest tab to add your first video."
+        )

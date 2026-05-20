@@ -7,6 +7,8 @@ Controlled by WHISPER_MODE env var (default: local).
 Local model size controlled by WHISPER_MODEL_SIZE (default: base).
 """
 
+from __future__ import annotations
+
 import json
 from dataclasses import dataclass
 from pathlib import Path
@@ -55,7 +57,7 @@ class Transcript:
     segments: list[TranscriptSegment]
     full_text: str = ""
 
-    def __post_init__(self):
+    def __post_init__(self) -> None:
         if not self.full_text:
             self.full_text = " ".join(s.text.strip() for s in self.segments)
 
@@ -64,7 +66,9 @@ class Transcript:
             "video_id": self.video_id,
             "language": self.language,
             "full_text": self.full_text,
-            "segments": [{"start": s.start, "end": s.end, "text": s.text} for s in self.segments],
+            "segments": [
+                {"start": s.start, "end": s.end, "text": s.text} for s in self.segments
+            ],
         }
 
     def save(self, path: Path) -> None:
@@ -75,7 +79,9 @@ class Transcript:
     @classmethod
     def load(cls, path: Path) -> Transcript:
         data = json.loads(path.read_text())
-        segments = [TranscriptSegment(s["start"], s["end"], s["text"]) for s in data["segments"]]
+        segments = [
+            TranscriptSegment(s["start"], s["end"], s["text"]) for s in data["segments"]
+        ]
         return cls(
             video_id=data["video_id"],
             language=data["language"],
@@ -93,11 +99,13 @@ class WhisperTranscriber:
     Mode is determined by settings.whisper_mode.
     """
 
-    def __init__(self):
+    def __init__(self) -> None:
         self.mode = settings.whisper_mode
         self._local_model: Any | None = None  # lazy-loaded
 
-    def transcribe(self, audio_path: Path, video_id: str, language: str | None = None) -> Transcript:
+    def transcribe(
+        self, audio_path: Path, video_id: str, language: str | None = None
+    ) -> Transcript:
         """
         Transcribe the audio file at `audio_path`.
 
@@ -121,7 +129,9 @@ class WhisperTranscriber:
 
     # ── Local Whisper ────────────────────────────────────────────────────────
 
-    def _transcribe_local(self, audio_path: Path, video_id: str, language: str | None) -> Transcript:
+    def _transcribe_local(
+        self, audio_path: Path, video_id: str, language: str | None
+    ) -> Transcript:
         """Run openai-whisper locally."""
         model = self._get_local_model()
 
@@ -141,9 +151,13 @@ class WhisperTranscriber:
         ]
 
         detected_language = result.get("language", language or "en")
-        logger.success(f"[Whisper/local] Done — {len(segments)} segments, lang={detected_language}")
+        logger.success(
+            f"[Whisper/local] Done — {len(segments)} segments, lang={detected_language}"
+        )
 
-        return Transcript(video_id=video_id, language=detected_language, segments=segments)
+        return Transcript(
+            video_id=video_id, language=detected_language, segments=segments
+        )
 
     def _get_local_model(self) -> Any:
         """Lazy-load the Whisper model (avoids loading it until needed)."""
@@ -158,7 +172,9 @@ class WhisperTranscriber:
     # ── OpenAI API Whisper ───────────────────────────────────────────────────
 
     @retry(stop=stop_after_attempt(3), wait=wait_exponential(min=2, max=10))
-    def _transcribe_api(self, audio_path: Path, video_id: str, language: str | None) -> Transcript:
+    def _transcribe_api(
+        self, audio_path: Path, video_id: str, language: str | None
+    ) -> Transcript:
         """Call the OpenAI Whisper API."""
         from openai import OpenAI
 
@@ -168,7 +184,7 @@ class WhisperTranscriber:
             max_retries=2,
         )
 
-        with open(audio_path, "rb") as f:
+        with audio_path.open("rb") as f:
             base_kwargs = {
                 "model": "whisper-1",
                 "file": f,
@@ -177,7 +193,9 @@ class WhisperTranscriber:
             }
 
             if language:
-                response = client.audio.transcriptions.create(**base_kwargs, language=language)
+                response = client.audio.transcriptions.create(
+                    **base_kwargs, language=language
+                )
             else:
                 response = client.audio.transcriptions.create(**base_kwargs)
 
@@ -193,6 +211,10 @@ class WhisperTranscriber:
         ]
 
         detected_language = getattr(response, "language", language or "en")
-        logger.success(f"[Whisper/api] Done — {len(segments)} segments, lang={detected_language}")
+        logger.success(
+            f"[Whisper/api] Done — {len(segments)} segments, lang={detected_language}"
+        )
 
-        return Transcript(video_id=video_id, language=detected_language, segments=segments)
+        return Transcript(
+            video_id=video_id, language=detected_language, segments=segments
+        )

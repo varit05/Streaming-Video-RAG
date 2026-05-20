@@ -89,7 +89,12 @@ class Settings(BaseSettings):
 
     def ensure_dirs(self) -> None:
         """Create all required data directories if they don't exist."""
-        for d in [self.data_dir, self.audio_dir, self.transcript_dir, self.chroma_persist_dir]:
+        for d in [
+            self.data_dir,
+            self.audio_dir,
+            self.transcript_dir,
+            self.chroma_persist_dir,
+        ]:
             Path(d).mkdir(parents=True, exist_ok=True)
 
 

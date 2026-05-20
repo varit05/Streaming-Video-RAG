@@ -144,7 +144,9 @@ def _run_ingest_pipeline(
 
     db = SessionLocal()
 
-    def update_job(status: str, message: str, video_id: str | None = None, error: str | None = None) -> None:
+    def update_job(
+        status: str, message: str, video_id: str | None = None, error: str | None = None
+    ) -> None:
         try:
             job = db.query(IngestJob).filter(IngestJob.id == job_id).first()
             if job:
@@ -159,7 +161,9 @@ def _run_ingest_pipeline(
                 db.commit()
         except Exception:
             db.rollback()
-            logger.warning(f"[Ingest] Job {job_id} — failed to update status to {status!r}")
+            logger.warning(
+                f"[Ingest] Job {job_id} — failed to update status to {status!r}"
+            )
 
     try:
         settings.ensure_dirs()
@@ -169,7 +173,11 @@ def _run_ingest_pipeline(
         ingester = _get_ingester(source_type, platform, api_credentials)
         asset = ingester.ingest(source)
 
-        update_job("transcribing", "Transcribing audio with Whisper...", video_id=asset.video_id)
+        update_job(
+            "transcribing",
+            "Transcribing audio with Whisper...",
+            video_id=asset.video_id,
+        )
 
         # ── Step 2: Save video record ─────────────────────────────────────────
         # Use merge so a concurrent job for the same video_id doesn't raise IntegrityError.
@@ -191,11 +199,15 @@ def _run_ingest_pipeline(
             db.rollback()
             video = db.query(Video).filter(Video.id == asset.video_id).first()
             if video is None:
-                raise RuntimeError(f"Video {asset.video_id} not found after merge") from None
+                raise RuntimeError(
+                    f"Video {asset.video_id} not found after merge"
+                ) from None
 
         # ── Step 3: Transcribe ────────────────────────────────────────────────
         transcriber = _get_transcriber()
-        transcript = transcriber.transcribe(asset.local_audio_path, asset.video_id, language)
+        transcript = transcriber.transcribe(
+            asset.local_audio_path, asset.video_id, language
+        )
 
         # Save transcript to disk
         transcript_path = Path(settings.transcript_dir) / f"{asset.video_id}.json"
@@ -210,7 +222,9 @@ def _run_ingest_pipeline(
         chunks = chunker.chunk(transcript, asset)
 
         if not chunks:
-            raise ValueError("No chunks produced from transcript — audio may be silent or too short")
+            raise ValueError(
+                "No chunks produced from transcript — audio may be silent or too short"
+            )
 
         # ── Step 5: Embed ─────────────────────────────────────────────────────
         embedder = _get_embedder()
@@ -229,7 +243,11 @@ def _run_ingest_pipeline(
             video.indexed_at = datetime.utcnow()
             db.commit()
 
-        update_job("done", f"Indexed {len(chunks)} chunks successfully", video_id=asset.video_id)
+        update_job(
+            "done",
+            f"Indexed {len(chunks)} chunks successfully",
+            video_id=asset.video_id,
+        )
         logger.success(f"[Ingest] Job {job_id} complete — {len(chunks)} chunks indexed")
 
     except Exception as e:
@@ -251,7 +269,9 @@ def _run_ingest_pipeline(
 
 
 def _detect_source_type(source: str) -> str:
-    if source.startswith("http") and ("youtu" in source or "vimeo" in source or "twitch" in source):
+    if source.startswith("http") and (
+        "youtu" in source or "vimeo" in source or "twitch" in source
+    ):
         return "youtube"
     if source.startswith("rtmp") or ".m3u8" in source:
         return "live_stream"
@@ -260,7 +280,11 @@ def _detect_source_type(source: str) -> str:
     return "local_file"
 
 
-def _get_ingester(source_type: str, platform: str | None = None, credentials: dict[str, str] | None = None) -> Any:
+def _get_ingester(
+    source_type: str,
+    platform: str | None = None,
+    credentials: dict[str, str] | None = None,
+) -> Any:
     from ingestion import LiveStreamIngester, LocalFileIngester, YouTubeIngester
     from ingestion.video_api import get_api_ingester
 
@@ -271,6 +295,8 @@ def _get_ingester(source_type: str, platform: str | None = None, credentials: di
     elif source_type == "live_stream":
         return LiveStreamIngester(audio_dir=settings.audio_dir)
     elif source_type == "video_api":
-        return get_api_ingester(platform or "vimeo", credentials or {}, audio_dir=settings.audio_dir)
+        return get_api_ingester(
+            platform or "vimeo", credentials or {}, audio_dir=settings.audio_dir
+        )
     else:
         return YouTubeIngester(audio_dir=settings.audio_dir)

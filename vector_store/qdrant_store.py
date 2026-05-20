@@ -41,7 +41,9 @@ class QdrantVectorStore(BaseVectorStore):
         # Infer dimension from embedder
         self._dim = cast(Any, Embedder()).dimension
         self._ensure_collection()
-        logger.info(f"[Qdrant] Connected — collection '{self._collection}', dim={self._dim}")
+        logger.info(
+            f"[Qdrant] Connected — collection '{self._collection}', dim={self._dim}"
+        )
 
     def _ensure_collection(self) -> None:
         """Create the collection if it doesn't exist yet."""
@@ -53,7 +55,9 @@ class QdrantVectorStore(BaseVectorStore):
             )
             logger.info(f"[Qdrant] Created collection '{self._collection}'")
 
-    def add_chunks(self, chunks: list[VideoChunk], embeddings: list[list[float]]) -> None:
+    def add_chunks(
+        self, chunks: list[VideoChunk], embeddings: list[list[float]]
+    ) -> None:
         if not chunks:
             return
 
@@ -78,9 +82,17 @@ class QdrantVectorStore(BaseVectorStore):
         try:
             query_filter = None
             if filter_video_id:
-                query_filter = Filter(must=[FieldCondition(key="video_id", match=MatchValue(value=filter_video_id))])
+                query_filter = Filter(
+                    must=[
+                        FieldCondition(
+                            key="video_id", match=MatchValue(value=filter_video_id)
+                        )
+                    ]
+                )
 
-            logger.debug(f"[Qdrant] Executing search with top_k={top_k}, filter={filter_video_id}")
+            logger.debug(
+                f"[Qdrant] Executing search with top_k={top_k}, filter={filter_video_id}"
+            )
 
             hits = self._client.search(
                 collection_name=self._collection,
@@ -108,15 +120,21 @@ class QdrantVectorStore(BaseVectorStore):
                     )
                     results.append(SearchResult(chunk=chunk, score=float(hit.score)))
                 except Exception as hit_error:
-                    logger.warning(f"[Qdrant] Failed to parse hit id={hit.id}: {hit_error}")
+                    logger.warning(
+                        f"[Qdrant] Failed to parse hit id={hit.id}: {hit_error}"
+                    )
                     continue
 
         except Exception as e:
             logger.error(f"[Qdrant] Search failed: {e!s}")
-            logger.error(f"[Qdrant] Collection: {self._collection}, top_k: {top_k}, filter: {filter_video_id}")
+            logger.error(
+                f"[Qdrant] Collection: {self._collection}, top_k: {top_k}, filter: {filter_video_id}"
+            )
             raise
         else:
-            logger.debug(f"[Qdrant] Search completed successfully, found {len(results)} valid results")
+            logger.debug(
+                f"[Qdrant] Search completed successfully, found {len(results)} valid results"
+            )
             return results
 
     def delete_video(self, video_id: str) -> int:
@@ -124,7 +142,9 @@ class QdrantVectorStore(BaseVectorStore):
         count_before = self.count(video_id)
         self._client.delete(
             collection_name=self._collection,
-            points_selector=Filter(must=[FieldCondition(key="video_id", match=MatchValue(value=video_id))]),
+            points_selector=Filter(
+                must=[FieldCondition(key="video_id", match=MatchValue(value=video_id))]
+            ),
         )
         logger.info(f"[Qdrant] Deleted ~{count_before} chunks for video {video_id}")
         return count_before
@@ -133,11 +153,17 @@ class QdrantVectorStore(BaseVectorStore):
         if video_id:
             result = self._client.count(
                 collection_name=self._collection,
-                count_filter=Filter(must=[FieldCondition(key="video_id", match=MatchValue(value=video_id))]),
+                count_filter=Filter(
+                    must=[
+                        FieldCondition(key="video_id", match=MatchValue(value=video_id))
+                    ]
+                ),
                 exact=True,
             )
             return cast(int, result.count)
-        return cast(int, self._client.count(collection_name=self._collection, exact=True).count)
+        return cast(
+            int, self._client.count(collection_name=self._collection, exact=True).count
+        )
 
     @staticmethod
     def _chunk_id_to_int(chunk_id: str) -> int:

@@ -27,7 +27,7 @@ class SearchEngine:
     Supports optional filtering by video_id.
     """
 
-    def __init__(self):
+    def __init__(self) -> None:
         self.retriever = get_retriever()
 
     def search(

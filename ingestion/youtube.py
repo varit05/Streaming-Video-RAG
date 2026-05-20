@@ -86,16 +86,29 @@ class YouTubeIngester(BaseIngester):
         """Run yt-dlp in dump-only mode to get video metadata as JSON."""
         try:
             result = subprocess.run(
-                ["yt-dlp", "--dump-json", "--no-playlist", "--js-runtimes", "node,deno", url],
+                [
+                    "yt-dlp",
+                    "--dump-json",
+                    "--no-playlist",
+                    "--js-runtimes",
+                    "node,deno",
+                    url,
+                ],
                 capture_output=True,
                 text=True,
                 timeout=60,
             )
             if result.returncode != 0:
-                logger.warning(f"[YouTube] Metadata fetch warning: {result.stderr[:200]}")
+                logger.warning(
+                    f"[YouTube] Metadata fetch warning: {result.stderr[:200]}"
+                )
                 return {}
             return cast(dict[str, Any], json.loads(result.stdout))
-        except (subprocess.TimeoutExpired, json.JSONDecodeError, FileNotFoundError) as e:
+        except (
+            subprocess.TimeoutExpired,
+            json.JSONDecodeError,
+            FileNotFoundError,
+        ) as e:
             logger.warning(f"[YouTube] Metadata fetch failed: {e}")
             return {}
 
@@ -131,4 +144,6 @@ class YouTubeIngester(BaseIngester):
             if wav_candidate.exists():
                 wav_candidate.rename(output_path)
             else:
-                raise FileNotFoundError(f"Expected audio at {output_path} but not found")
+                raise FileNotFoundError(
+                    f"Expected audio at {output_path} but not found"
+                )

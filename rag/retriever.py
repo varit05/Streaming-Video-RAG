@@ -12,7 +12,7 @@ from vector_store import SearchResult, get_vector_store
 _retriever_instance = None
 
 
-def get_retriever():
+def get_retriever() -> "Retriever":
     """Return a cached Retriever singleton."""
     global _retriever_instance
     if _retriever_instance is None:
@@ -26,7 +26,7 @@ class Retriever:
     Handles embedding the query and calling the vector store.
     """
 
-    def __init__(self):
+    def __init__(self) -> None:
         self.embedder = Embedder()
         self.store = get_vector_store()
 
@@ -48,11 +48,15 @@ class Retriever:
             List of SearchResult sorted by relevance (highest first)
         """
         top_k = top_k or settings.retrieval_top_k
-        logger.debug(f"[Retriever] Query='{query[:60]}', top_k={top_k}, video_id={video_id}")
+        logger.debug(
+            f"[Retriever] Query='{query[:60]}', top_k={top_k}, video_id={video_id}"
+        )
 
         try:
             query_vector = self.embedder.embed_query(query)
-            results = self.store.search(query_vector, top_k=top_k, filter_video_id=video_id)
+            results = self.store.search(
+                query_vector, top_k=top_k, filter_video_id=video_id
+            )
         except Exception as e:
             import traceback
 
@@ -71,7 +75,9 @@ class Retriever:
         # Validate results before returning
         for idx, result in enumerate(results):
             if not hasattr(result, "chunk") or not hasattr(result, "score"):
-                logger.warning(f"[Retriever] Invalid result object at index {idx}: {result}")
+                logger.warning(
+                    f"[Retriever] Invalid result object at index {idx}: {result}"
+                )
 
         return results
 
@@ -82,5 +88,7 @@ class Retriever:
         """
         parts = []
         for i, r in enumerate(results, 1):
-            parts.append(f'[{i}] "{r.chunk.title}" @ {r.chunk.start_ts}-{r.chunk.end_ts}\n{r.chunk.text}')
+            parts.append(
+                f'[{i}] "{r.chunk.title}" @ {r.chunk.start_ts}-{r.chunk.end_ts}\n{r.chunk.text}'
+            )
         return "\n\n---\n\n".join(parts)

@@ -6,9 +6,11 @@ import streamlit as st
 from utils import api_post
 
 
-def render_qa_tab(video_options):
+def render_qa_tab(video_options: dict[str, str | None]) -> None:
     st.header("Ask a Question")
-    st.caption("Get answers grounded in your indexed video content, with timestamped citations.")
+    st.caption(
+        "Get answers grounded in your indexed video content, with timestamped citations."
+    )
 
     selected_video_label = st.selectbox("Scope (optional)", list(video_options.keys()))
     selected_video_id = video_options[selected_video_label]

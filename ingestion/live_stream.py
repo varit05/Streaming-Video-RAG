@@ -59,7 +59,10 @@ class LiveStreamIngester(BaseIngester):
             source_type=SourceType.LIVE_STREAM,
             local_audio_path=audio_path,
             duration_seconds=float(segment_seconds),
-            extra_metadata={"segment_type": "live", "capture_duration": segment_seconds},
+            extra_metadata={
+                "segment_type": "live",
+                "capture_duration": segment_seconds,
+            },
         )
 
     def ingest_stream(
@@ -93,7 +96,9 @@ class LiveStreamIngester(BaseIngester):
 
                 yield asset
 
-                logger.debug(f"[LiveStream] Segment {segment_count} done, capturing next...")
+                logger.debug(
+                    f"[LiveStream] Segment {segment_count} done, capturing next..."
+                )
 
         except KeyboardInterrupt:
             logger.info("[LiveStream] Capture stopped by user.")
@@ -103,7 +108,9 @@ class LiveStreamIngester(BaseIngester):
 
     # ── Private helpers ──────────────────────────────────────────────────────
 
-    def _capture_segment(self, source: str, output: Path, duration_seconds: int) -> None:
+    def _capture_segment(
+        self, source: str, output: Path, duration_seconds: int
+    ) -> None:
         """
         Use ffmpeg to read from the stream for `duration_seconds` and save as WAV.
         """

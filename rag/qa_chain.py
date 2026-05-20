@@ -71,7 +71,7 @@ class QAChain:
     Retrieves relevant chunks, builds a prompt, and calls the LLM.
     """
 
-    def __init__(self):
+    def __init__(self) -> None:
         self.retriever = get_retriever()
 
     def ask(
@@ -110,7 +110,10 @@ class QAChain:
 
         # ── Call LLM ──────────────────────────────────────────────────────────
         llm = get_llm(temperature=0.0)
-        messages = [SystemMessage(content=SYSTEM_PROMPT), HumanMessage(content=user_message)]
+        messages = [
+            SystemMessage(content=SYSTEM_PROMPT),
+            HumanMessage(content=user_message),
+        ]
         response = llm.invoke(messages)
         answer = response.content if hasattr(response, "content") else str(response)
         answer = cast(str, answer)

@@ -6,14 +6,18 @@ import streamlit as st
 from utils import api_post
 
 
-def render_search_tab(video_options):
+def render_search_tab(video_options: dict[str, str | None]) -> None:
     st.header("Semantic Search")
     st.caption("Find relevant video segments by meaning, not just keywords.")
 
-    search_video_label = st.selectbox("Scope (optional)", list(video_options.keys()), key="search_scope")
+    search_video_label = st.selectbox(
+        "Scope (optional)", list(video_options.keys()), key="search_scope"
+    )
     search_video_id = video_options[search_video_label]
 
-    query = st.text_input("Search query", placeholder="neural network training techniques")
+    query = st.text_input(
+        "Search query", placeholder="neural network training techniques"
+    )
 
     col1, col2 = st.columns(2)
     with col1:

@@ -6,7 +6,7 @@ import streamlit as st
 from utils import api_post, poll_job
 
 
-def render_ingest_tab():
+def render_ingest_tab() -> None:
     st.header("Ingest a Video")
     st.caption(
         "Add a video source to your RAG library. Supports YouTube URLs, local files, live streams, and video APIs."
@@ -14,7 +14,12 @@ def render_ingest_tab():
 
     source_type = st.radio(
         "Source type",
-        ["YouTube / URL", "Local File Path", "Live Stream (HLS/RTMP)", "Video API (Vimeo/Twitch)"],
+        [
+            "YouTube / URL",
+            "Local File Path",
+            "Live Stream (HLS/RTMP)",
+            "Video API (Vimeo/Twitch)",
+        ],
         horizontal=True,
     )
 
@@ -30,9 +35,15 @@ def render_ingest_tab():
 
     col1, col2 = st.columns(2)
     with col1:
-        language = st.text_input("Language (optional)", placeholder="en, es, fr, de, ...")
+        language = st.text_input(
+            "Language (optional)", placeholder="en, es, fr, de, ..."
+        )
     with col2:
-        platform = st.selectbox("Platform", ["vimeo", "twitch"]) if "Video API" in source_type else None
+        platform = (
+            st.selectbox("Platform", ["vimeo", "twitch"])
+            if "Video API" in source_type
+            else None
+        )
 
     source_type_map = {
         "YouTube / URL": "youtube",
@@ -55,7 +66,9 @@ def render_ingest_tab():
             status_placeholder = st.empty()
             final = poll_job(job_id, status_placeholder)
             if final.get("status") == "done":
-                status_placeholder.success(f"✅ Ingestion complete! Video ID: `{final.get('video_id')}`")
+                status_placeholder.success(
+                    f"✅ Ingestion complete! Video ID: `{final.get('video_id')}`"
+                )
                 st.balloons()
             elif final.get("status") == "error":
                 status_placeholder.error(f"❌ Error: {final.get('error_message')}")

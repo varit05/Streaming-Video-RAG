@@ -32,7 +32,9 @@ class SearchResult:
 
 class BaseVectorStore(ABC):
     @abstractmethod
-    def add_chunks(self, chunks: list[VideoChunk], embeddings: list[list[float]]) -> None:
+    def add_chunks(
+        self, chunks: list[VideoChunk], embeddings: list[list[float]]
+    ) -> None:
         """Store chunks and their embeddings."""
         ...
 

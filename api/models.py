@@ -8,14 +8,23 @@ from pydantic import BaseModel, Field
 
 
 class IngestRequest(BaseModel):
-    source: str = Field(..., description="YouTube URL, local file path, stream URL, or video API URL")
+    source: str = Field(
+        ..., description="YouTube URL, local file path, stream URL, or video API URL"
+    )
     source_type: str | None = Field(
         None,
         description="Hint for source type: 'youtube' | 'local_file' | 'live_stream' | 'video_api'. Auto-detected if omitted.",
     )
-    language: str | None = Field(None, description="ISO 639-1 language code (e.g. 'en'). Auto-detected if omitted.")
-    platform: str | None = Field(None, description="For video_api source: 'vimeo' | 'twitch'")
-    api_credentials: dict[str, str] | None = Field(None, description="API credentials for video_api source")
+    language: str | None = Field(
+        None,
+        description="ISO 639-1 language code (e.g. 'en'). Auto-detected if omitted.",
+    )
+    platform: str | None = Field(
+        None, description="For video_api source: 'vimeo' | 'twitch'"
+    )
+    api_credentials: dict[str, str] | None = Field(
+        None, description="API credentials for video_api source"
+    )
 
 
 class IngestResponse(BaseModel):
@@ -59,9 +68,15 @@ class VideoListResponse(BaseModel):
 
 
 class QueryRequest(BaseModel):
-    question: str = Field(..., description="Natural language question to answer from video content")
-    video_id: str | None = Field(None, description="If set, restrict search to this video")
-    top_k: int | None = Field(None, description="Number of chunks to retrieve (default: from settings)")
+    question: str = Field(
+        ..., description="Natural language question to answer from video content"
+    )
+    video_id: str | None = Field(
+        None, description="If set, restrict search to this video"
+    )
+    top_k: int | None = Field(
+        None, description="Number of chunks to retrieve (default: from settings)"
+    )
 
 
 class SourceCitation(BaseModel):
@@ -86,7 +101,9 @@ class QueryResponse(BaseModel):
 
 class SearchRequest(BaseModel):
     query: str = Field(..., description="Semantic search query")
-    video_id: str | None = Field(None, description="If set, search only within this video")
+    video_id: str | None = Field(
+        None, description="If set, search only within this video"
+    )
     top_k: int = Field(10, description="Maximum number of results")
     min_score: float = Field(0.0, description="Minimum similarity score (0-1)")
 
@@ -117,7 +134,9 @@ class SearchResponse(BaseModel):
 
 class SummarizeRequest(BaseModel):
     video_id: str
-    include_chapters: bool = Field(True, description="Also generate per-chapter summaries if available")
+    include_chapters: bool = Field(
+        True, description="Also generate per-chapter summaries if available"
+    )
 
 
 class ChapterSummary(BaseModel):

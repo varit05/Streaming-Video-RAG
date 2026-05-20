@@ -77,7 +77,9 @@ class LocalFileIngester(BaseIngester):
         self._extract_audio(source_path, audio_path)
 
         duration = float(metadata.get("format", {}).get("duration", 0)) or None
-        title = metadata.get("format", {}).get("tags", {}).get("title") or source_path.stem
+        title = (
+            metadata.get("format", {}).get("tags", {}).get("title") or source_path.stem
+        )
 
         logger.success(f"[LocalFile] Done → {audio_path}")
 
@@ -120,4 +122,6 @@ class LocalFileIngester(BaseIngester):
                 .run(quiet=True)
             )
         except ffmpeg.Error as e:
-            raise RuntimeError(f"ffmpeg audio extraction failed: {e.stderr.decode()}") from e
+            raise RuntimeError(
+                f"ffmpeg audio extraction failed: {e.stderr.decode()}"
+            ) from e
