@@ -67,6 +67,8 @@ def _openai_llm(temperature: float) -> BaseChatModel:
         temperature=temperature,
         api_key=SecretStr(settings.openai_api_key) if settings.openai_api_key else None,
         streaming=True,
+        timeout=120,
+        max_retries=3,
     )
 
 
@@ -78,6 +80,8 @@ def _anthropic_llm(temperature: float) -> BaseChatModel:
         "model": settings.llm_model,
         "api_key": settings.anthropic_api_key,
         "streaming": True,
+        "timeout": 120,
+        "max_retries": 3,
     }
     if not settings.llm_model.startswith("claude-opus-4-7"):
         kwargs["temperature"] = temperature
@@ -87,8 +91,11 @@ def _anthropic_llm(temperature: float) -> BaseChatModel:
 def _ollama_llm(temperature: float) -> BaseChatModel:
     from langchain_ollama import ChatOllama
 
+    # Ollama can be slow on large prompts, so we use a generous timeout
     return ChatOllama(
         model=settings.ollama_model,
         temperature=temperature,
         base_url=settings.ollama_base_url,
+        num_predict=4096,
+        timeout=300,  # 5 minute timeout for Ollama
     )
