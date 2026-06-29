@@ -2,7 +2,10 @@
 
 ## What This System Does
 
-A full-featured RAG (Retrieval-Augmented Generation) pipeline built around video content. You can point it at a YouTube URL, a local file, a live stream, or a video API — and it will transcribe, chunk, embed, and index the content. From there, users can ask questions, search across a video library, or get summaries, all grounded in timestamped video segments.
+A full-featured RAG (Retrieval-Augmented Generation) pipeline built around video content. 
+
+You can point it at a YouTube URL, a local file, a live stream, or a video API — and it will transcribe, chunk, embed, and index the content. 
+From there, users can ask questions, search across a video library, or get summaries, all grounded in timestamped video segments.
 
 ---
 

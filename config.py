@@ -76,6 +76,7 @@ class Settings(BaseSettings):
     retrieval_top_k: int = 5
     chunk_duration_seconds: int = 60
     chunk_overlap_seconds: int = 15
+    use_hyde: bool = False  # Enable/disable HyDE query transformation
 
     # ── Live stream ───────────────────────────────────────────────────────
     live_stream_segment_seconds: int = 60  # capture window per segment

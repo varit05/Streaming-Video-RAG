@@ -13,7 +13,7 @@ API_BASE = os.getenv("UI_API_BASE_URL", "http://localhost:8000")
 REQUEST_TIMEOUT = int(os.getenv("UI_REQUEST_TIMEOUT", 600))
 
 
-def api_get(path: str, **kwargs: Any) -> Any:
+def api_get(path: str, **kwargs: Any) -> None:
     try:
         r = httpx.get(f"{API_BASE}{path}", timeout=30, **kwargs)
         r.raise_for_status()
@@ -36,7 +36,7 @@ def api_get(path: str, **kwargs: Any) -> Any:
         return None
 
 
-def api_post(path: str, json: dict[str, object | None] | dict[str, str]) -> Any:
+def api_post(path: str, json: dict[str, object | None] | dict[str, str]) -> None:
     try:
         r = httpx.post(f"{API_BASE}{path}", json=json, timeout=REQUEST_TIMEOUT)
         r.raise_for_status()
