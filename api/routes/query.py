@@ -51,7 +51,7 @@ def query_videos(request: QueryRequest) -> QueryResponse:
     response_model=SummarizeResponse,
     responses={404: {"description": "Video not found"}},
 )
-def summarize_video(
+async def summarize_video(
     request: SummarizeRequest, db: Annotated[Session, Depends(get_db)]
 ) -> SummarizeResponse:
     """
@@ -67,7 +67,7 @@ def summarize_video(
         )
 
     summarizer = Summarizer()
-    result = summarizer.summarize(
+    result = await summarizer.summarize_async(
         video_id=request.video_id,
         title=str(video.title),
         include_chapters=request.include_chapters,
