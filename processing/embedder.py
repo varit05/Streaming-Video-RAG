@@ -84,6 +84,24 @@ class Embedder:
         else:
             return self._embed_openai([query])[0]
 
+    def embed_query_batch(self, texts: list[str]) -> list[list[float]]:
+        """
+        Embed a batch of query strings for retrieval.
+        Useful for MMR diversity scoring and multi-query expansion.
+
+        Args:
+            texts: List of text strings to embed
+
+        Returns:
+            List of float vectors, one per text (same order)
+        """
+        if not texts:
+            return []
+        if self.mode == EmbeddingMode.LOCAL:
+            return self._embed_local(texts)
+        else:
+            return self._embed_openai(texts)
+
     # ── Local (sentence-transformers) ────────────────────────────────────────
 
     def _embed_local(self, texts: list[str]) -> list[list[float]]:

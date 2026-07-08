@@ -13,13 +13,17 @@ from vector_store import SearchResult, get_vector_store
 
 _retriever_instance = None
 
-HYDE_SYSTEM_PROMPT = "You are an expert video transcript generator."
+HYDE_SYSTEM_PROMPT = """\
+You are an expert at generating realistic video transcript excerpts. \
+Given a question, write a single dense, factual paragraph that would likely appear \
+in a video transcript answering that question. Use first-person ("I", "we") as if \
+spoken by a presenter. Include specific keywords, technical terms, names, and numbers \
+that would help a semantic search engine find this content. Do NOT include meta-talk \
+like "Here is a transcript excerpt". Just provide the transcript content itself."""
 
 HYDE_USER_PROMPT = """\
-Given a question, write a single paragraph that would likely appear in a video transcript answering that question.
-The paragraph should be in the first person ("I", "we") as if spoken by a presenter.
-Focus on being factual and informative. Do not include any meta-talk like "Here is a transcript excerpt".
-Just provide the content of the transcript itself.
+Generate a realistic video transcript excerpt that answers the following question. \
+Make it dense with relevant keywords and terminology.
 
 Question: {query}
 

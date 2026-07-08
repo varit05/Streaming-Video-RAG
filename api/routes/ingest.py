@@ -173,6 +173,20 @@ def _run_ingest_pipeline(
         ingester = _get_ingester(source_type, platform, api_credentials)
         asset = ingester.ingest(source)
 
+        # Idempotency: skip videos that are already fully indexed to avoid
+        # re-transcribing and re-embedding (duplicate cost + duplicate vectors).
+        existing = db.query(Video).filter(Video.id == asset.video_id).first()
+        if existing is not None and str(existing.status) == "indexed":
+            update_job(
+                "done",
+                f"Video already indexed ({existing.chunk_count} chunks) — skipped",
+                video_id=asset.video_id,
+            )
+            logger.info(
+                f"[Ingest] Job {job_id} — video {asset.video_id} already indexed, skipping"
+            )
+            return
+
         update_job(
             "transcribing",
             "Transcribing audio with Whisper...",
@@ -262,8 +276,11 @@ def _run_ingest_pipeline(
                     video.status = "error"
                     video.error_message = str(e)
                     db.commit()
-        except Exception:
-            pass
+        except Exception as cleanup_error:
+            db.rollback()
+            logger.warning(
+                f"[Ingest] Job {job_id} — failed to mark video as error: {cleanup_error}"
+            )
     finally:
         db.close()
 
