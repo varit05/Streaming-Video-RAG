@@ -43,7 +43,7 @@ class Settings(BaseSettings):
     # ── Whisper transcription ─────────────────────────────────────────────
     whisper_mode: WhisperMode = WhisperMode.LOCAL
     # Local model size: tiny | base | small | medium | large | large-v2
-    whisper_model_size: str = "large-v2"
+    whisper_model_size: str = "base"
 
     # ── Embeddings ────────────────────────────────────────────────────────
     embedding_mode: EmbeddingMode = EmbeddingMode.LOCAL
@@ -76,13 +76,27 @@ class Settings(BaseSettings):
     retrieval_top_k: int = 5
     chunk_duration_seconds: int = 60
     chunk_overlap_seconds: int = 15
-    use_hyde: bool = False  # Enable/disable HyDE query transformation
+    use_hyde: bool = False  # HyDE query transformation (adds 1 LLM call per query)
+
+    # ── Re-ranker ─────────────────────────────────────────────────────────
+    use_reranker: bool = True
+    reranker_model: str = "cross-encoder/ms-marco-MiniLM-L-6-v2"
+    reranker_top_k: int = 10  # Fetch this many from vector store before reranking
+
+    # ── MMR diversity ─────────────────────────────────────────────────────
+    use_mmr: bool = True
+    mmr_lambda: float = 0.5  # 0 = only diversity, 1 = only relevance
+
+    # ── Multi-query expansion ─────────────────────────────────────────────
+    use_multi_query: bool = False  # adds 1 LLM call + N extra searches per query
+    multi_query_count: int = 3
 
     # ── Live stream ───────────────────────────────────────────────────────
     live_stream_segment_seconds: int = 60  # capture window per segment
 
     # ── UI ────────────────────────────────────────────────────────────────
     ui_api_base_url: str = "http://localhost:8000"
+    ui_request_timeout: int = 120
 
     class Config:
         env_file = ".env"

@@ -9,7 +9,7 @@ from loguru import logger
 
 from vector_store import SearchResult
 
-from .retriever import get_retriever
+from .pipeline import RAGPipeline
 
 
 @dataclass
@@ -28,7 +28,7 @@ class SearchEngine:
     """
 
     def __init__(self) -> None:
-        self.retriever = get_retriever()
+        self.pipeline = RAGPipeline()
 
     def search(
         self,
@@ -51,7 +51,7 @@ class SearchEngine:
         """
         logger.info(f"[Search] Query='{query[:60]}', top_k={top_k}")
 
-        raw_results = self.retriever.retrieve(query, top_k=top_k, video_id=video_id)
+        raw_results = self.pipeline.retrieve(query, top_k=top_k, video_id=video_id)
 
         # Apply score threshold
         filtered = [r for r in raw_results if r.score >= min_score]

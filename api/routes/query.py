@@ -22,7 +22,13 @@ from storage.database import Video, get_db
 router = APIRouter(tags=["RAG"])
 
 
-@router.post("/query", response_model=QueryResponse)
+@router.post(
+    "/query",
+    response_model=QueryResponse,
+    responses={
+        503: {"description": "LLM service unavailable (e.g. Ollama not running)"},
+    },
+)
 def query_videos(request: QueryRequest) -> QueryResponse:
     """
     Ask a question and get an answer grounded in indexed video content.
@@ -31,11 +37,22 @@ def query_videos(request: QueryRequest) -> QueryResponse:
     logger.info(f"[API/query] '{request.question[:60]}'")
 
     chain = QAChain()
-    result = chain.ask(
-        question=request.question,
-        video_id=request.video_id,
-        top_k=request.top_k,
-    )
+    try:
+        result = chain.ask(
+            question=request.question,
+            video_id=request.video_id,
+            top_k=request.top_k,
+        )
+    except Exception as exc:
+        logger.error(f"[API/query] LLM invocation failed: {exc}")
+        raise HTTPException(
+            status_code=503,
+            detail=(
+                f"Cannot reach the LLM backend: {exc}. "
+                "Check that Ollama is running (`ollama serve`) "
+                "or verify your LLM_PROVIDER and API key configuration."
+            ),
+        ) from exc
 
     sources = [SourceCitation.model_validate(s) for s in result.source_citations]
 
@@ -49,7 +66,10 @@ def query_videos(request: QueryRequest) -> QueryResponse:
 @router.post(
     "/summarize",
     response_model=SummarizeResponse,
-    responses={404: {"description": "Video not found"}},
+    responses={
+        404: {"description": "Video not found"},
+        503: {"description": "LLM service unavailable (e.g. Ollama not running)"},
+    },
 )
 def summarize_video(
     request: SummarizeRequest, db: Annotated[Session, Depends(get_db)]
@@ -67,11 +87,24 @@ def summarize_video(
         )
 
     summarizer = Summarizer()
-    result = summarizer.summarize(
-        video_id=request.video_id,
-        title=str(video.title),
-        include_chapters=request.include_chapters,
-    )
+    try:
+        result = summarizer.summarize(
+            video_id=request.video_id,
+            title=str(video.title),
+            include_chapters=request.include_chapters,
+        )
+    except Exception as exc:
+        # Catch connection errors (e.g. Ollama not running),
+        # timeouts, and any other LLM invocation failures.
+        logger.error(f"[API/summarize] LLM invocation failed: {exc}")
+        raise HTTPException(
+            status_code=503,
+            detail=(
+                f"Cannot reach the LLM backend: {exc}. "
+                "Check that Ollama is running (`ollama serve`) "
+                "or verify your LLM_PROVIDER and API key configuration."
+            ),
+        ) from exc
 
     chapter_summaries = None
     if result.chapter_summaries:

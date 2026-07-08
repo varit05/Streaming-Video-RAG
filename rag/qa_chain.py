@@ -1,6 +1,8 @@
 """
 Q&A chain — answers questions grounded in retrieved video transcript chunks.
 Returns the answer text plus citations (video title + timestamp for each source).
+
+Uses the RAGPipeline (multi-query + reranker + MMR) for high-quality retrieval.
 """
 
 from dataclasses import dataclass
@@ -12,19 +14,27 @@ from loguru import logger
 from llm.factory import get_llm
 from vector_store import SearchResult
 
-from .retriever import get_retriever
+from .pipeline import RAGPipeline
 
 SYSTEM_PROMPT = """\
-You are a helpful assistant that answers questions based on video transcript content.
+You are a helpful, precise assistant that answers questions based on video transcript content.
 You are given relevant excerpts from one or more video transcripts, each labeled with \
 a source video title and timestamp range.
 
-Rules:
-- Answer only based on the provided transcript excerpts.
-- If the answer is not found in the excerpts, say so clearly.
-- Be concise and direct.
-- Reference source numbers (e.g. [1], [2]) when citing specific content.
-- Do not invent information beyond what is in the transcripts.
+## Rules:
+1. Answer ONLY based on the provided transcript excerpts. Do NOT use outside knowledge.
+2. If the answer is not fully found in the excerpts, say so clearly and explain what IS available.
+3. Be concise but thorough. Cover all relevant information from the transcripts.
+4. Cite sources using bracketed numbers: [1], [2], etc. At the end of your answer, \
+list the source references with their titles and timestamps.
+5. If the question asks for a list, use bullet points. If it asks for an explanation, \
+use clear paragraphs.
+6. If the question is ambiguous, acknowledge the ambiguity and answer the most likely interpretation.
+7. Do NOT invent information beyond what is in the transcripts.
+
+## Output format:
+- Answer: [your answer here with [1], [2] citations]
+- Sources: [1] "Video Title" @ 00:01:23-00:02:45
 """
 
 QA_PROMPT_TEMPLATE = """\
@@ -35,8 +45,7 @@ Context from video transcripts:
 
 Question: {question}
 
-Please answer based on the transcript excerpts above. If citing a source, reference its number (e.g. [1]).
-"""
+Please answer based on the transcript excerpts above. Cite sources with [1], [2], etc."""
 
 
 @dataclass
@@ -68,11 +77,11 @@ class QAResult:
 class QAChain:
     """
     Retrieval-augmented Q&A over indexed video content.
-    Retrieves relevant chunks, builds a prompt, and calls the LLM.
+    Uses RAGPipeline (multi-query + reranker + MMR) for retrieval and calls the LLM.
     """
 
     def __init__(self) -> None:
-        self.retriever = get_retriever()
+        self.pipeline = RAGPipeline()
 
     def ask(
         self,
@@ -94,7 +103,7 @@ class QAChain:
         logger.info(f"[QA] Question: '{question[:80]}'")
 
         # ── Retrieve relevant chunks ──────────────────────────────────────────
-        results = self.retriever.retrieve(question, top_k=top_k, video_id=video_id)
+        results = self.pipeline.retrieve(question, top_k=top_k, video_id=video_id)
 
         if not results:
             return QAResult(
@@ -105,7 +114,7 @@ class QAChain:
             )
 
         # ── Build context and prompt ──────────────────────────────────────────
-        context = self.retriever.format_context(results)
+        context = self._format_context(results)
         user_message = QA_PROMPT_TEMPLATE.format(context=context, question=question)
 
         # ── Call LLM ──────────────────────────────────────────────────────────
@@ -126,3 +135,16 @@ class QAChain:
             sources=results,
             video_id=video_id,
         )
+
+    @staticmethod
+    def _format_context(results: list[SearchResult]) -> str:
+        """
+        Format retrieved chunks into a context block for the LLM.
+        Each chunk is prefixed with its source video title and timestamp.
+        """
+        parts = []
+        for i, r in enumerate(results, 1):
+            parts.append(
+                f'[{i}] "{r.chunk.title}" @ {r.chunk.start_ts}-{r.chunk.end_ts}\n{r.chunk.text}'
+            )
+        return "\n\n---\n\n".join(parts)
